@@ -7,7 +7,7 @@
 #include <element/Debugger.h>
 #include <element/Inputs.h>
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 #include <stdexcept>
 #include <memory>

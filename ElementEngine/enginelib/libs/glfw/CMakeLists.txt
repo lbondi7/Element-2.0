@@ -1,1 +1,18 @@
-add_subdirectory(glfw-3.3.2)
+MACRO(SUBDIRLIST result curdir)
+  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+      LIST(APPEND dirlist ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
+SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
+
+FOREACH(subdir ${SUBDIRS})
+  add_subdirectory(${subdir})
+ENDFOREACH()
+
+#add_subdirectory(glfw-3.3.2)

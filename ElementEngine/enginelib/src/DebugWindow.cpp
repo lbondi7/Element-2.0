@@ -1,7 +1,7 @@
 #include <element/DebugWindow.h>
 #include "ImGUI_.h"
 
-#include <imgui/imgui.h>
+#include <imgui.h>
 
 
 Element::DebugWindow::DebugWindow(const std::string& label, WindowType type) : label(label)
