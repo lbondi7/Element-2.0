@@ -73,11 +73,13 @@ void Element::VknModel::SetTexture(Texture* _texture)
 	if (texture == _texture)
 		return;
 
-	descriptorSet->update(uniformBuffers, texture);
+	//descriptorSet->createDescWritesAndUpdate(uniformBuffers, texture);
 	if(dirty == DirtyFlags::CLEAN)
 		dirty = DirtyFlags::DIRTY;
 
 	texture = _texture;
+	descriptorSet->updateImageInfo(texture ? &texture->m_image.m_descriptorInfo :
+                                &Locator::getResource()->texture("default")->m_image.m_descriptorInfo, 1);
 }
 
 void Element::VknModel::SetPipeline(VknPipeline* _pipeline)
@@ -186,8 +188,8 @@ void Element::VknModel::init(VknPipeline* _pipeline, uint32_t imageCount)
 		buffer.Map();
 	}
 	//descriptorSet = std::make_unique<DescriptorSet>();
-	descriptorSet = VknResources::get().allocateDescriptorSet();
-	descriptorSet->init(pipeline, imageCount);
+	descriptorSet = Locator::getVknResource()->allocateDescriptorSet();
+	descriptorSet->init(pipeline, imageCount, 0);
 	SetTexture(Locator::getResource()->texture("default"));
 }
 
@@ -197,7 +199,8 @@ void Element::VknModel::reInit(uint32_t imageCount)
 	prevEntityState = EntityState::NOT_RENDERED;
 	//descriptorSet = std::make_unique<DescriptorSet>();
 	descriptorSet->init(pipeline, imageCount);
-	descriptorSet->update(uniformBuffers, texture);
+    std::vector<void*>data{uniformBuffers.data(), texture};
+	descriptorSet->createDescWriteAndUpdate(data);
 	dirty = DirtyFlags::DIRTY;
 }
 

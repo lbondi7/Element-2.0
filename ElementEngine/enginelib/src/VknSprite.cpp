@@ -157,7 +157,7 @@ void Element::VknSprite::init(VknPipeline* pipeline, Mesh* mesh, uint32_t imageC
 	descriptorSet = std::make_unique<DescriptorSet>();
 	descriptorSet->init(m_pipeline, imageCount);
 	SetTexture(Locator::getResource()->texture("default"), false);
-	//descriptorSet->update(uniformBuffers, m_texture);
+	//descriptorSet->createDescWritesAndUpdate(uniformBuffers, m_texture);
 	id = IdHandler::GetID();
 }
 

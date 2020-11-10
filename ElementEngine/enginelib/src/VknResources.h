@@ -13,11 +13,13 @@ namespace Element {
     class VknResources {
 
     public:
+        VknResources() = default;
+        ~VknResources() = default;
 
-        static VknResources& get(){
-            static VknResources resources;
-            return resources;
-        }
+//        static VknResources& get(){
+//            static VknResources resources;
+//            return resources;
+//        }
 
         DescriptorSet* allocateDescriptorSet();
 
@@ -29,8 +31,6 @@ namespace Element {
         void destroy();
 
     private:
-        VknResources() = default;
-        ~VknResources() = default;
 
         std::vector<std::unique_ptr<DescriptorSet>> descriptorSets;
         std::vector<std::unique_ptr<VknDescriptorPool>> descriptorPools;

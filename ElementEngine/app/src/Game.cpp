@@ -70,6 +70,9 @@ void Game::update(Element::Time& epoch)
 //	if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_3))
 //		camera->SetZoom(camera->GetZoom() - zoomSpeed * dt_sec);
 
+    if (Element::Inputs::get().keyDown(Element::KEYS::KEY_P))
+        objects[0].model->SetTexture(m_renderer->getTexture("texture"));
+
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_9))
         camera->setRotY( camera->getRotY() - zoomSpeed * dt_sec);
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_7))

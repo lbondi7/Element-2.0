@@ -15,6 +15,7 @@ namespace Element {
             explicit Vec3();
             explicit Vec3(float x, float y, float z);
             explicit Vec3(float value);
+            explicit Vec3::Vec3(float* values);
 
             ~Vec3() = default;
 

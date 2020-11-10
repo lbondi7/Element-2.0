@@ -27,9 +27,7 @@ namespace Element {
 	struct Texture
 	{
 
-	    Texture(){
-	        gay.clear();
-	    }
+	    Texture() = default;
 
 	    TextureData data;
 
@@ -41,7 +39,6 @@ namespace Element {
 
 		void updateImageDescriptor();
 
-		std::vector<int> gay;
 
 		Image m_image;
 		VkImageView m_imageView;

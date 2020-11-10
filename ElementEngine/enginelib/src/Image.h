@@ -29,5 +29,7 @@ namespace Element {
 		int32_t m_height;
 		uint32_t m_mipLevels;
 		VkDescriptorImageInfo m_descriptorInfo;
+
+        uint32_t binding;
 	};
 }

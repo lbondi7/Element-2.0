@@ -51,6 +51,7 @@ void Element::VknRenderer::init()
     Device::setupLogicalDevice(surface);
 
     Locator::initResources(std::make_unique<Resources>());
+    Locator::initVknResources(std::make_unique<VknResources>());
 
     Maths::Vec3 vector = Maths::Vec3();
     Debugger::get().log(vector.r);
@@ -211,7 +212,7 @@ void Element::VknRenderer::signalExit()
 void Element::VknRenderer::cleanupSwapChain() {
 
     vkDeviceWaitIdle(Device::getVkDevice());
-    VknResources::get().destroy();
+    //Locator::getVknResource()->destroy();
     swapChain->DestroyDepthResource();
     swapChain->DestroyColourResource();
 
@@ -302,7 +303,7 @@ void Element::VknRenderer::rebuildCommandBuffers() {
             m_pipelineManager->BindPipeline(model->GetPipeline(), vkCmdBuffer);
             vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                     model->GetPipeline()->GetVkPipelineLayout(), 0, 1,
-                                    &model->descriptorSet->descriptorSets[i], 0, nullptr);
+                                    &model->descriptorSet->descriptors.first[i], 0, nullptr);
             BindMesh(model->GetMesh(), vkCmdBuffer);
             vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(model->GetMesh()->indices.size()), 1, 0, 0, 0);
 
@@ -418,7 +419,6 @@ void Element::VknRenderer::updateUniformBuffers()
         if (!model)
             continue;
 
-
 //        model->updateUniformBuffers(camera->hasCameraChanged(), camera->getViewMatrix(),
 //                                    camera->getProjMatrix(), swapChain->CurrentImageIndex());
         model->updateUniformBuffers(camera->hasCameraChanged(),
@@ -466,11 +466,15 @@ Element::Model* Element::VknRenderer::createModel()
 {
     auto& model = vknModels.emplace_back();
     model = std::make_unique<VknModel>(m_pipelineManager->getPipeline("default"), swapChain->getImageCount());
-//    model->descriptorSet = VknResources::get().allocateDescriptorSet();
+    //model->descriptorSet = VknResources::get().allocateDescriptorSet();
 //    model->descriptorSet->init(model->GetPipeline(), swapChain->getImageCount());
 //
-//   // std::vector<void*>data{model->GetUniformBuffers().data(), model->GetTexture()};
-//    model->descriptorSet->update(model->GetUniformBuffers(), model->GetTexture());
+     std::vector<void*>data{model->GetUniformBuffers().data(), model->GetTexture()};
+
+    model->descriptorSet->addData(model->GetUniformBuffers().data());
+    model->descriptorSet->addData(model->GetTexture());
+    model->descriptorSet->createDescWritesAndUpdate();
+//    model->descriptorSet->createDescWritesAndUpdate(model->GetUniformBuffers(), model->GetTexture());
     return dynamic_cast<Model*>(model.get());
     //return new VknModel(m_pipelineManager->getDefaultPipeline());
 }

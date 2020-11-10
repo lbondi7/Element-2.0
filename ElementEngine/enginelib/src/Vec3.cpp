@@ -10,6 +10,8 @@ namespace Maths {
     Vec3::Vec3(float x, float y, float z) : x(x), y(y), z(z) {}
     Vec3::Vec3(float value): x(value), y(value), z(value)  {}
 
+    Vec3::Vec3(float* values): x(values[0]), y(values[1]), z(values[2]){};
+
     Vec3 Vec3::operator()(float value) const {
         return Vec3(value);
     }

@@ -110,7 +110,7 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VknResources.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VknResources.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.h src/Locator.cpp src/Locator.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.h src/Locator.cpp src/Locator.h src/Light.cpp src/Light.h)
 
 target_include_directories(
     ${PROJECT_NAME} SYSTEM PUBLIC

@@ -104,14 +104,24 @@ void Element::Resources::LoadMaterialData(const char *file, MaterialData& materi
     if(is.is_open())
         tinyobj::LoadMtl(&material_map, &materials, &is, &warn, &err);
 
-    materialData.ambient = Vec3(materials[0].ambient[0], materials[0].ambient[1], materials[0].ambient[2]);
-    materialData.diffuse = Vec3(materials[0].diffuse[0], materials[0].diffuse[1], materials[0].diffuse[2]);
-    materialData.specular = Vec3(materials[0].specular[0], materials[0].specular[1], materials[0].specular[2]);
+
+    materialData.ambient = Vec3(materials[0].ambient);
+    materialData.diffuse = Vec3(materials[0].diffuse);
+    materialData.specular = Vec3(materials[0].specular);
+    materialData.transmittance = Vec3(materials[0].transmittance);
+    materialData.shininess = materials[0].shininess;
+    materialData.dissolve = materials[0].dissolve;
+    materialData.refractionIndex = materials[0].ior;
+    materialData.illum = materials[0].illum;
+
+    /// PBR values;
+    materialData.roughness = materials[0].roughness;
+    materialData.anisotropy = materials[0].anisotropy;
+    materialData.metallic = materials[0].metallic;
+    materialData.sheen = materials[0].sheen;
 
 //    tinyobj::MaterialFileReader matFileReader(filename);
 //    matFileReader.operator()("plane.mtl", &materials, &material_map, &warn, &err);
-
-
 }
 
 Element::Mesh *Element::Resources::mesh(const std::string &name, State state) {
@@ -159,33 +169,12 @@ Element::Shader *Element::Resources::shader(const std::string &name, Element::Sh
     switch (type) {
         case ShaderType::VERTEX: {
                 return getShader(name, type, vertex_shaders);
-            //            auto &shader = vertex_shaders[name];
-//            if (shader)
-//                return shader.get();
-//
-//            shader = std::make_unique<Shader>();
-//            shader->Load(type, name);
-//            return shader.get();
         }
         case ShaderType::FRAGMENT: {
             return getShader(name, type, fragment_shaders);
-//            auto &shader = fragment_shaders[name];
-//            if (shader)
-//                return shader.get();
-//
-//            shader = std::make_unique<Shader>();
-//            shader->Load(type, name);
-//            return shader.get();
         }
         case ShaderType::GEOMETRY: {
             return getShader(name, type, geometry_shaders);
-//            auto &shader = geometry_shaders[name];
-//            if (shader)
-//                return shader.get();
-//
-//            shader = std::make_unique<Shader>();
-//            shader->Load(type, name);
-//            return shader.get();
         }
     }
 
@@ -212,7 +201,7 @@ void Element::Resources::init() {
         texture(name);
 }
 
-void Element::Resources::deInit() {
+void Element::Resources::destroy() {
 
     for (auto& mesh: static_meshes)
         mesh.second.destroy();
@@ -251,5 +240,17 @@ Element::Shader *Element::Resources::getShader(const std::string& name, Element:
 
 Element::Resources::~Resources() {
 
+}
+
+Element::Material *Element::Resources::material(const std::string &name, Element::Resources::State state) {
+    auto tmp_name = (state == State::STATIC ? "s_" : "d_") + Utilities::extractName(name);
+
+    auto &material = state == State::STATIC ? static_materials[tmp_name] : dynamic_materials[tmp_name];
+    if (material)
+        return material.get();
+
+    material = std::make_unique<Material>();
+    LoadMaterialData(name.c_str(), material->data);
+    return material.get();
 }
 

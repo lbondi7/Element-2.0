@@ -72,7 +72,7 @@ void Element::Camera::SetFOV(float fov)
     cameraChanged = true;
 }
 
-//void Element::Camera::update(float windowWidth, float windowHeight)
+//void Element::Camera::createDescWritesAndUpdate(float windowWidth, float windowHeight)
 //{
 //    if (!cameraChanged) return;
 //

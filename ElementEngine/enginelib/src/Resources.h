@@ -28,11 +28,13 @@ namespace Element {
 
         Element::Shader *shader(const std::string &name, ShaderType type);
 
+        Element::Material *material(const std::string &name, State state = State::STATIC);
+
         void unbindMeshes();
 
         void init();
 
-        void deInit();
+        void destroy();
 
 
 	private:
@@ -47,6 +49,9 @@ namespace Element {
 
         std::map<std::string, std::unique_ptr<Texture>> static_textures;
         std::map<std::string, std::unique_ptr<Texture>> dynamic_textures;
+
+        std::map<std::string, std::unique_ptr<Material>> static_materials;
+        std::map<std::string, std::unique_ptr<Material>> dynamic_materials;
 
 
         void LoadTextureData(const std::string& file, TextureData& textureData);

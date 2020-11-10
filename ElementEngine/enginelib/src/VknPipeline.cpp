@@ -108,7 +108,7 @@ void Element::VknPipeline::createDescriptorSetLayout() {
 void Element::VknPipeline::createDescriptorPool() {
 
     m_descriptorPools.emplace_back(
-            VknResources::get().allocateDescriptorPool(m_pipelineData, m_swapChain->getImageCount()));
+            Locator::getVknResource()->allocateDescriptorPool(m_pipelineData, m_swapChain->getImageCount()));
 
 }
 
@@ -208,7 +208,8 @@ VkDescriptorPool Element::VknPipeline::allocateDescriptorPool(uint32_t descripto
             return pool->getVkDescriptorPool();
     }
 
-    auto& pool = m_descriptorPools.emplace_back(VknResources::get().allocateDescriptorPool(
+    auto& pool = m_descriptorPools.emplace_back(
+            Locator::getVknResource()->allocateDescriptorPool(
             m_pipelineData, m_swapChain->getImageCount()));
     return pool->getVkDescriptorPool();
 }

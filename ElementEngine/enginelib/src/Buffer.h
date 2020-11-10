@@ -35,5 +35,7 @@ namespace Element {
 		VkDescriptorBufferInfo m_descriptorInfo;
 		void* mapped = nullptr;
 		bool isMapped = false;
+
+		uint32_t binding;
 	};
 }

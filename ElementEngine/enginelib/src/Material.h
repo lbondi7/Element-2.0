@@ -12,6 +12,18 @@ namespace Element {
         Vec3 ambient;
         Vec3 diffuse;
         Vec3 specular;
+        Vec3 transmittance;
+        Vec3 emission;
+        float shininess;
+        float refractionIndex;
+        float dissolve;
+        float illum;
+
+        /// Physically Based Rendering values
+        float roughness;
+        float metallic;
+        float sheen;
+        float anisotropy;
     };
 
     struct Material {
