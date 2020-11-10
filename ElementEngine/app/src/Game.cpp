@@ -37,7 +37,7 @@ void Game::init()
 		pos += Vec3(2, 2, 2);
 	} 
 	 
-	camera = m_renderer->createCamera(Element::CameraType::ORTHOGRAPHIC);
+	camera = m_renderer->createCamera(Element::CameraType::PERSPECTIVE);
 	//camera = m_renderer->createOrthographicCamera();
 	//glm::vec4 viewport = camera->GetViewport();
 	//viewport.x = 0.5f; 

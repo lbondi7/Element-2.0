@@ -182,7 +182,8 @@ void Element::VknRenderer::createRenderer() {
     PipelineData pipelineData{};
     pipelineData.shaderInfo.push_back({BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
                                        "shader", 0, 1000 });
-    pipelineData.shaderInfo.push_back({BindObjectType::IMAGE, ShaderType::FRAGMENT, "shader", 1, 1000 });
+    pipelineData.shaderInfo.push_back({BindObjectType::IMAGE, ShaderType::FRAGMENT,
+                                       "shader", 1, 1 });
 
     m_pipelineManager->generatePipeline("default", pipelineData);
 

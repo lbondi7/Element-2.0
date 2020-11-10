@@ -106,27 +106,6 @@ void Element::VknPipeline::createDescriptorSetLayout() {
 }
 
 void Element::VknPipeline::createDescriptorPool() {
-//    uint32_t requireSetInfo = 0;
-//    std::vector<VkDescriptorPoolSize> poolSizes;
-//    for (const auto& binding : bindingsData)
-//    {
-//        auto descriptorCount = static_cast<uint32_t>
-//        (m_swapChain->getImageCount()*
-//         binding.descriptorCount);
-//        poolSizes.emplace_back(Element::VkInitializers::descriptorPoolSizeCreateInfo(binding.descriptorType,
-//                                                                                     descriptorCount));
-//        requireSetInfo += descriptorCount;
-//    }
-//
-//    VkDescriptorPoolCreateInfo poolInfo =
-//            VkInitializers::descriptorPoolCreateInfo(poolSizes.data(),
-//                                                     static_cast<uint32_t>(poolSizes.size()),
-//                                                     requireSetInfo);
-//
-//
-//    if (vkCreateDescriptorPool(Device::getVkDevice(), &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
-//        throw std::runtime_error("failed to create descriptor pool!");
-//    }
 
     m_descriptorPools.emplace_back(
             VknResources::get().allocateDescriptorPool(m_pipelineData, m_swapChain->getImageCount()));
@@ -233,23 +212,3 @@ VkDescriptorPool Element::VknPipeline::allocateDescriptorPool(uint32_t descripto
             m_pipelineData, m_swapChain->getImageCount()));
     return pool->getVkDescriptorPool();
 }
-
-//const VkDescriptorSetLayout Element::VknPipeline::GetVkDescriptorSetLayout() const
-//{
-//    return m_descriptorSetLayout;
-//}
-//
-//const VkPipeline Element::VknPipeline::GetVkPipeline() const
-//{
-//    return m_vkPipeline;
-//}
-//
-//const VkPipelineLayout Element::VknPipeline::GetVkPipelineLayout() const
-//{
-//    return m_pipelineLayout;
-//}
-//
-//const VkDescriptorPool Element::VknPipeline::GetVkDescriptorPool() const
-//{
-//    return m_descriptorPool;
-//}

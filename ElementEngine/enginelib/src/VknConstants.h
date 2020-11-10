@@ -72,31 +72,30 @@ struct SwapChainSupportDetails {
 
 struct Vertex {
     glm::vec3 pos;
-    glm::vec3 color;
+    glm::vec3 normal;
     glm::vec2 texCoord;
 
     bool operator==(const Vertex& other) const {
-        return pos == other.pos && color == other.color && texCoord == other.texCoord;
+        return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
     }
 
-    Vertex& operator=(const Vertex& other){
-        this->pos = other.pos;
-        this->color = other.color;
-        this->texCoord = other.texCoord;
-        return *this;
-    }
+    Vertex& operator=(const Vertex& other)= default;
 
     static VkVertexInputBindingDescription getBindingDescription() {
-        VkVertexInputBindingDescription bindingDescription = Element::VkInitializers::vertexInputBindingDescription(VK_VERTEX_INPUT_RATE_VERTEX, 0, sizeof(Vertex));
+        VkVertexInputBindingDescription bindingDescription = Element::VkInitializers::vertexInputBindingDescription(
+                VK_VERTEX_INPUT_RATE_VERTEX, 0, sizeof(Vertex));
         return bindingDescription;
     }
 
     static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
         std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
         
-        attributeDescriptions[0] = Element::VkInitializers::vertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos));
-        attributeDescriptions[1] = Element::VkInitializers::vertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color));
-        attributeDescriptions[2] = Element::VkInitializers::vertexInputAttributeDescription(0, 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, texCoord));
+        attributeDescriptions[0] = Element::VkInitializers::vertexInputAttributeDescription(
+                        0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos));
+        attributeDescriptions[1] = Element::VkInitializers::vertexInputAttributeDescription(
+                        0, 1,VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal));
+        attributeDescriptions[2] = Element::VkInitializers::vertexInputAttributeDescription(
+                        0, 2,VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, texCoord));
 
         return attributeDescriptions;
     }
