@@ -32,7 +32,7 @@ namespace Element {
         void setDirty(DirtyFlags flag);
 
         void updateUniformBuffers(bool cameraChanged, const glm::mat4& viewMatrix, const glm::mat4& projMatrix, uint32_t imageIndex);
-
+        void updateUniformBuffers(bool cameraChanged, UniformBufferObject &ubo, uint32_t imageIndex);
         void setEntityState(EntityState state);
         EntityState getEntityState();
         EntityState getPrevEntityState();

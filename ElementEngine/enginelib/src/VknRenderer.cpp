@@ -181,9 +181,9 @@ void Element::VknRenderer::createRenderer() {
 
     PipelineData pipelineData{};
     pipelineData.shaderInfo.push_back({BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
-                                       "shader", 0, 1000 });
+                                       "shader3", 0, 1000 });
     pipelineData.shaderInfo.push_back({BindObjectType::IMAGE, ShaderType::FRAGMENT,
-                                       "shader", 1, 1 });
+                                       "shader3", 1, 1 });
 
     m_pipelineManager->generatePipeline("default", pipelineData);
 
@@ -407,14 +407,22 @@ void Element::VknRenderer::CheckSprites()
 
 void Element::VknRenderer::updateUniformBuffers()
 {
+    UniformBufferObject ubo{};
+    ubo.view = camera->getViewMatrix();
+    ubo.proj = camera->getProjMatrix();
+    ubo.viewPos = Utilities::vec3RefToGlmvec3(camera->getPos());
+    ubo.viewPos.y *= -1;
     //Debugger::Get().startTimer("uniformBuffers");
     for (auto& model : vknModels)
     {
         if (!model)
             continue;
 
-        model->updateUniformBuffers(camera->hasCameraChanged(), camera->getViewMatrix(),
-                                    camera->getProjMatrix(), swapChain->CurrentImageIndex());
+
+//        model->updateUniformBuffers(camera->hasCameraChanged(), camera->getViewMatrix(),
+//                                    camera->getProjMatrix(), swapChain->CurrentImageIndex());
+        model->updateUniformBuffers(camera->hasCameraChanged(),
+                                    ubo, swapChain->CurrentImageIndex());
         model->setDirty(DirtyFlags::CLEAN);
         model->setEntityState(model->getEntityState() == EntityState::RENDERED ? EntityState::READY_TO_RENDER : EntityState::NOT_RENDERED);
     }
@@ -424,8 +432,10 @@ void Element::VknRenderer::updateUniformBuffers()
         if (!sprite)
             continue;
 
-        sprite->updateUniformBuffers(camera->hasCameraChanged(), camera->getViewMatrix(),
-                                     camera->getProjMatrix(), swapChain->CurrentImageIndex());
+//        sprite->updateUniformBuffers(camera->hasCameraChanged(), camera->getViewMatrix(),
+//                                     camera->getProjMatrix(), swapChain->CurrentImageIndex());
+        sprite->updateUniformBuffers(camera->hasCameraChanged(),
+                                     ubo, swapChain->CurrentImageIndex());
         sprite->setDirty(DirtyFlags::CLEAN);
         sprite->setEntityState(sprite->getEntityState() == EntityState::RENDERED ? EntityState::READY_TO_RENDER : EntityState::NOT_RENDERED);
     }

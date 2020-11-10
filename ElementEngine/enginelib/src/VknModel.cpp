@@ -116,7 +116,7 @@ void Element::VknModel::setDirty(DirtyFlags flag)
 	dirty = flag;
 }
 
-void Element::VknModel::updateUniformBuffers(bool cameraChanged, const glm::mat4& viewMatrix, const glm::mat4& projMatrix, uint32_t imageIndex)
+void Element::VknModel::updateUniformBuffers(bool cameraChanged, const glm::mat4& viewMatrix, const glm::mat4& projMatrix,uint32_t imageIndex)
 {
 
 	if (!transform.isUpdated() && !cameraChanged)
@@ -221,4 +221,19 @@ void Element::VknModel::init(VknPipeline* _pipeline, uint32_t imageCount, std::v
 
     descriptorSet->init(pipeline, imageCount);
     SetTexture(Locator::getResource()->texture("default"));
+}
+
+void Element::VknModel::updateUniformBuffers(bool cameraChanged, UniformBufferObject &ubo, uint32_t
+imageIndex) {
+
+    if (!transform.isUpdated() && !cameraChanged)
+        return;
+
+    auto pos = Utilities::vec3RefToGlmvec3(transform.getPosition());
+    pos.y *= -1;
+    ubo.model = glm::translate(ubo.model, pos);
+    ubo.model *= glm::yawPitchRoll(transform.getRotation().y, transform.getRotation().x, transform.getRotation().z);
+    ubo.model = glm::scale(ubo.model, Utilities::vec3RefToGlmvec3(transform.getScale()));
+
+    uniformBuffers[imageIndex].CopyMemory(&ubo, sizeof(ubo));
 }

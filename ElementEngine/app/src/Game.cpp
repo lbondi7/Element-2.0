@@ -25,16 +25,15 @@ Game::~Game()
 
 void Game::init()
 {
-	Vec3 pos(0, 0, 5);
-	objects.resize(1);
+	Vec3 pos(0, 0, 0);
+	objects.resize(2);
 	for (auto& object : objects)
 	{
 		object.model = m_renderer->createModel();
 		object.model->SetMesh(m_renderer->getMesh("cube"));
 		object.model->GetTransform().setPosition(pos);
-        object.model->GetTransform().setScale(6);
-        //object.model->GetTransform().setScale();
-		pos += Vec3(2, 2, 2);
+        object.model->GetTransform().setScale(0.5f);
+		pos += Vec3(1.2, 1, -2);
 	} 
 	 
 	camera = m_renderer->createCamera(Element::CameraType::PERSPECTIVE);
@@ -64,19 +63,32 @@ void Game::update(Element::Time& epoch)
 
 	float zoomSpeed = 100.0f;
 
-	if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_1))
-		camera->SetZoom(camera->GetZoom() + zoomSpeed * dt_sec);
-	if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_3))
-		camera->SetZoom(camera->GetZoom() - zoomSpeed * dt_sec);
+    float moveSpeed = 10.0f;
 
+//	if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_1))
+//		camera->SetZoom(camera->GetZoom() + zoomSpeed * dt_sec);
+//	if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_3))
+//		camera->SetZoom(camera->GetZoom() - zoomSpeed * dt_sec);
+
+    if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_9))
+        camera->setRotY( camera->getRotY() - zoomSpeed * dt_sec);
+    if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_7))
+        camera->setRotY(camera->getRotY() + zoomSpeed * dt_sec);
+
+    if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_8))
+        camera->setPos( camera->getPos() + (camera->GetForward() * moveSpeed * dt_sec));
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_5))
-        camera->setPosZ( camera->getPosZ() - zoomSpeed * dt_sec);
+        camera->setPos( camera->getPos() - (camera->GetForward() * moveSpeed * dt_sec));
 
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_4))
-        camera->setPosX( camera->getPosX() - zoomSpeed * dt_sec);
-
+        camera->setPos( camera->getPos() - (camera->GetRight() * moveSpeed * dt_sec));
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_6))
-        camera->setPosX( camera->getPosX() + zoomSpeed * dt_sec);
+        camera->setPos( camera->getPos() + (camera->GetRight() * moveSpeed * dt_sec));
+
+    if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_1))
+        camera->setPos( camera->getPos() - (camera->GetUp() * moveSpeed * dt_sec));
+    if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_3))
+        camera->setPos( camera->getPos() + (camera->GetUp() * moveSpeed * dt_sec));
 
 
 	if (Element::Inputs::get().keyDown(Element::KEYS::KEY_ESCAPE))

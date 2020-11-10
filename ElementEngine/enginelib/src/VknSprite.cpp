@@ -169,3 +169,18 @@ void Element::VknSprite::reInit(uint32_t imageCount) {
 	descriptorSet->update(uniformBuffers, m_texture);
 	dirty = DirtyFlags::DIRTY;
 }
+
+void Element::VknSprite::updateUniformBuffers(bool cameraChanged, UniformBufferObject &ubo, uint32_t imageIndex) {
+    if (!transform.isUpdated() && !cameraChanged)
+        return;
+
+    const auto& scalar = glm::vec3(transform.getSize().x * transform.getScale().x,
+                                   transform.getSize().y * transform.getScale().y, 1.0f);
+    auto pos = Utilities::vec3RefToGlmvec3(transform.getPosition());
+    pos.y *= -1;
+    ubo.model = glm::translate(ubo.model, pos + scalar);
+    ubo.model = glm::scale(ubo.model, scalar);
+    ubo.model = glm::rotate(ubo.model, glm::radians(transform.getRotationZ()), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    uniformBuffers[imageIndex].CopyMemory(&ubo, sizeof(ubo));
+}
