@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ElementConstants.h"
+#include "Transform.h"
 
 namespace Element {
 
@@ -41,9 +42,9 @@ namespace Element {
         [[nodiscard]] const Transform& GetTransform() const noexcept;
 		Transform& GetTransform() noexcept;
 
-        [[nodiscard]] const glm::vec3& Position() const noexcept;
-		[[nodiscard]] const glm::vec3& Rotation() const noexcept;
-		[[nodiscard]] const glm::vec3& Scale() const noexcept;
+        [[nodiscard]] const Vec3& Position() const noexcept;
+		[[nodiscard]] const Vec3& Rotation() const noexcept;
+		[[nodiscard]] const Vec3& Scale() const noexcept;
 
 
 	protected:

@@ -7,17 +7,22 @@
 
 void Element::DebugRenderer::init(VkRenderPass renderPass)
 {
-	ImGUI::Get().init();
-	ImGUI::Get().initResources(renderPass);
-	ImGUI::Get().start();
-	ImGUI::Get().end();
-	ImGUI::Get().updateBuffers();
+    auto& imgui = ImGUI::Get();
+
+	imgui.init();
+	imgui.initResources(renderPass);
+	imgui.start();
+	imgui.end();
+	imgui.updateBuffers();
 }
 
 
-void Element::DebugRenderer::update()
+void Element::DebugRenderer::update(float windowWidth, float windowHeight)
 {
-	ImGUI::Get().updateBuffers();
+    auto& imgui = ImGUI::Get();
+
+	imgui.updateMouse(windowWidth, windowHeight);
+	imgui.updateBuffers();
 }
 
 void Element::DebugRenderer::draw(VkCommandBuffer commandBuffer)

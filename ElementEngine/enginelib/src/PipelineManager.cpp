@@ -1,9 +1,8 @@
 #include "PipelineManager.h"
-#include "DefaultResources.h"
 
-Element::PipelineManager::PipelineManager(SwapChain* swapChain, RenderPass* renderPass, const PipelineData* pipelineData) : swapChain(swapChain), renderPass(renderPass)
+Element::PipelineManager::PipelineManager(SwapChain* swapChain, RenderPass* renderPass) : swapChain(swapChain), renderPass(renderPass)
 {
-	m_pipelines.emplace("default", std::make_unique<VknPipeline>(swapChain, renderPass, "default", *pipelineData));
+	//m_pipelines.emplace("default", std::make_unique<VknPipeline>(swapChain, renderPass, "default", *pipelineData));
 }
 
 Element::PipelineManager::~PipelineManager()
@@ -54,37 +53,37 @@ Element::VknPipeline* Element::PipelineManager::getPipeline(std::string name)
 	return nullptr;
 }
 
-void Element::PipelineManager::generatePipeline(std::string name, const PipelineData* pipelineData)
+void Element::PipelineManager::generatePipeline(std::string name, const PipelineData& pipelineData)
 {
 	for (const auto& pipeline : m_pipelines)
 	{
 		if (pipeline.first == name)
 			return;
 	}
-	bool hasVertex = false;
-	bool hasFragment = false;
+//	bool hasVertex = false;
+//	bool hasFragment = false;
 	
-	for (const auto& shader : pipelineData->shaders)
-	{
-		if (shader->GetShaderType() == Shader::ShaderType::VERTEX)
-			hasVertex = true;
+//	for (const auto& shader : pipelineData->shaderInfo)
+//	{
+//		if (shader.shaderType == ShaderType::VERTEX)
+//			hasVertex = true;
+//
+//		if (shader.shaderType == ShaderType::FRAGMENT)
+//			hasFragment = true;
+//	}
 
-		if (shader->GetShaderType() == Shader::ShaderType::FRAGMENT)
-			hasFragment = true;
-	}
+//	PipelineData newPipelineData{};
+//
+//	if (!hasFragment || !hasVertex)
+//	{
+//		newPipelineData = *pipelineData;
+//		if (!hasFragment)
+//			newPipelineData.shaders.emplace_back(DefaultResources::GetFragmentShader());
+//		if (!hasVertex)
+//			newPipelineData.shaders.emplace_back(DefaultResources::GetVertexShader());
+//	}
 
-	PipelineData newPipelineData{};
-
-	if (!hasFragment || !hasVertex)
-	{
-		newPipelineData = *pipelineData;
-		if (!hasFragment)
-			newPipelineData.shaders.emplace_back(DefaultResources::GetFragmentShader());
-		if (!hasVertex)
-			newPipelineData.shaders.emplace_back(DefaultResources::GetVertexShader());
-	}
-
-	auto newPipeline = std::make_unique<VknPipeline>(swapChain, renderPass, name, hasFragment && hasVertex ? *pipelineData : newPipelineData);
+	auto newPipeline = std::make_unique<VknPipeline>(swapChain, renderPass, name, pipelineData);
 	m_pipelines[name] = std::move(newPipeline);
 }
 

@@ -42,6 +42,8 @@ namespace Element {
 
 		bool isPrepared();
 
+		void updateMouse(float windowWidth, float windowHeight);
+
 	private:
 		VkSampler sampler;
 		Buffer vertexBuffer;

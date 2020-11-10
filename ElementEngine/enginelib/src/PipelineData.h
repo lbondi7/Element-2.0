@@ -5,19 +5,21 @@
 #pragma once
 
 #include "Shader.h"
-#include "DescriptorInfo.h"
+#include "ShaderInfo.h"
+
+#include <element/GameSettings.h>
 
 namespace Element{
 
 struct PipelineData {
-    std::vector<DescriptorInfo> descriptorInfo;
+    std::vector<ShaderInfo> shaderInfo;
 
-    std::vector<Shader*> shaders;
+    bool depthEnabled = GameSettings::get().depthEnabled;
+    int Topology = 0;
 
     PipelineData& operator=(const PipelineData& other) {
 
-        this->shaders = other.shaders;
-        this->descriptorInfo = other.descriptorInfo;
+        this->shaderInfo = other.shaderInfo;
         return *this;
     }
 };

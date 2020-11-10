@@ -3,8 +3,8 @@
 
 Element::ShaderManager::ShaderManager()
 {
-	GetShader(Shader::ShaderType::VERTEX, "shader");
-	GetShader(Shader::ShaderType::FRAGMENT, "shader");
+	GetShader(ShaderType::VERTEX, "shader");
+	GetShader(ShaderType::FRAGMENT, "shader");
 }
 
 Element::ShaderManager::~ShaderManager()
@@ -15,20 +15,20 @@ Element::ShaderManager::~ShaderManager()
 
 
 
-Element::Shader* Element::ShaderManager::GetShader(Shader::ShaderType type, std::string name)
+Element::Shader* Element::ShaderManager::GetShader(ShaderType type, std::string name)
 {
 	switch (type)
 	{
-	case Shader::ShaderType::VERTEX: {
+	case ShaderType::VERTEX: {
 
 		return CheckShaderCache(m_vertexShaders, type, name);
 	}
-	case Shader::ShaderType::FRAGMENT: {
+	case ShaderType::FRAGMENT: {
 
 	
 		return CheckShaderCache(m_fragmentShaders, type, name);
 	}
-	case Shader::ShaderType::GEOMETRY: {
+	case ShaderType::GEOMETRY: {
 
 
 		break;
@@ -44,18 +44,18 @@ void Element::ShaderManager::Destroy()
 	m_fragmentShaders.clear();
 }
 
-std::string Element::ShaderManager::GetFileExtension(Shader::ShaderType type)
+std::string Element::ShaderManager::GetFileExtension(ShaderType type)
 {
 	std::string extension = "";
 	switch (type)
 	{
-	case Element::Shader::ShaderType::VERTEX:
+	case Element::ShaderType::VERTEX:
 		extension += ".vert";
 		break;
-	case Element::Shader::ShaderType::FRAGMENT:
+	case Element::ShaderType::FRAGMENT:
 		extension += ".frag";
 		break;
-	case Element::Shader::ShaderType::GEOMETRY:
+	case Element::ShaderType::GEOMETRY:
 		extension += ".geom";
 		break;
 	}
@@ -63,7 +63,7 @@ std::string Element::ShaderManager::GetFileExtension(Shader::ShaderType type)
 	return extension;
 }
 
-Element::Shader* Element::ShaderManager::CheckShaderCache(std::map<std::string, std::unique_ptr<Element::Shader>>& shaders, Element::Shader::ShaderType type, std::string& name) {
+Element::Shader* Element::ShaderManager::CheckShaderCache(std::map<std::string, std::unique_ptr<Element::Shader>>& shaders, Element::ShaderType type, std::string& name) {
 	for (auto& shader : shaders)
 	{
 		if (shader.first == name)

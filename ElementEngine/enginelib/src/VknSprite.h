@@ -11,8 +11,9 @@ namespace Element {
         public Sprite
     {
     public:
-        VknSprite();
-        VknSprite(VknPipeline* pipeline, Mesh* mesh, uint32_t imageCount);
+        VknSprite() = default;
+        explicit VknSprite(VknPipeline* pipeline, Mesh* mesh, uint32_t imageCount);
+
         ~VknSprite() override;
 
         Mesh* GetMesh();
@@ -23,7 +24,7 @@ namespace Element {
         const Texture* GetTexture() const noexcept override;
         const VknPipeline* GetPipeline() const noexcept override;
 
-        void SetTexture(Texture* texture, bool keepSize = true) override;
+        void SetTexture(Texture* texture, bool keepSize) override;
         void SetPipeline(VknPipeline* pipeline) override;
         const VknPipeline* GetOldPipeline() const noexcept;
 
@@ -50,7 +51,7 @@ namespace Element {
         EntityState entityState;
         EntityState prevEntityState;
 
-        VknPipeline* oldPipeline;
+        VknPipeline* oldPipeline{};
         std::vector<Buffer> uniformBuffers;
         DirtyFlags dirty = DirtyFlags::CLEAN;
     };

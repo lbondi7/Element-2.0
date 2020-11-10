@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(imgui)
 
-
 MACRO(SUBDIRLIST result curdir)
   FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
   SET(dirlist "")
@@ -27,13 +26,12 @@ FOREACH(subdir ${SUBDIRS})
       ${subdir}/imstb_rectpack.h
       ${subdir}/imstb_textedit.h
       ${subdir}/imstb_truetype.h)
-
+  
   target_include_directories(
       ${PROJECT_NAME} SYSTEM PUBLIC
       "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}")
   message(${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
 ENDFOREACH()
-
 
 #[[
 add_library(${PROJECT_NAME}

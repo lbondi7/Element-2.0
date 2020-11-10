@@ -3,21 +3,27 @@
 #include "VkFunctions.h"
 #include "Device.h"
 #include "VkInitializers.h"
+#include "VknResources.h"
+#include "Resources.h"
+#include "Locator.h"
+
 #include <element/GameSettings.h>
 
 #include <stdexcept>
 
-Element::VknPipeline::VknPipeline(SwapChain* swapChain, RenderPass* renderPass, const std::string& name, const PipelineData& pipelineInfo) : m_swapChain(swapChain), m_renderPass(renderPass), name(name), m_pipelineData(pipelineInfo)
+Element::VknPipeline::VknPipeline(SwapChain* swapChain, RenderPass* renderPass, const std::string& name, const PipelineData& pipelineInfo) :
+m_swapChain(swapChain), m_renderPass(renderPass), name(name), m_pipelineData(pipelineInfo)
 {
-    for (const auto& bindInfo : m_pipelineData.descriptorInfo)
-        bindingsData.emplace_back(Element::VkInitializers::descriptorSetLayoutBinding(Shader::GetVkShaderStageFlag(bindInfo.descriptorShader), Element::VkFunctions::getDescriptorType(bindInfo.descriptorType), bindInfo.binding));
+    for (const auto& shaderInfo : m_pipelineData.shaderInfo) {
+        bindingsData.emplace_back(
+                Element::VkInitializers::descriptorSetLayoutBinding(
+                        Shader::GetVkShaderStageFlag(shaderInfo.shaderType),
+                        Element::VkFunctions::getDescriptorType(shaderInfo.bindObjectType),
+                        shaderInfo.binding));
 
-    for (const auto& shader : m_pipelineData.shaders)
-    {
-        if (!shader)
-            throw std::runtime_error("shader is null");
-
-        shaderStages.emplace_back(Element::VkInitializers::pipelineShaderStageCreateInfo(shader->GetVkShaderModule(), shader->GetVkShaderStageFlag()));
+        auto shader = Locator::getResource()->shader(shaderInfo.shader, shaderInfo.shaderType);
+        shaderStages.emplace_back(Element::VkInitializers::pipelineShaderStageCreateInfo(shader->GetVkShaderModule(),
+                                                                                          shader->GetVkShaderStageFlag()));
     }
 
     init();
@@ -25,15 +31,6 @@ Element::VknPipeline::VknPipeline(SwapChain* swapChain, RenderPass* renderPass, 
 
 Element::VknPipeline::~VknPipeline()
 {
-    for (auto& shader : m_pipelineData.shaders)
-    {
-        shader = nullptr;
-    }
-    for (auto& shader : m_pipelineData.shaders)
-    {
-        shader = nullptr;
-    }
-    m_pipelineData.shaders.clear();
     shaderStages.clear();
     bindingsData.clear();
 }
@@ -71,7 +68,10 @@ void Element::VknPipeline::flush() {
 
     flushed = true;
     auto logicalDevice = Device::getVkDevice();
-    vkDestroyDescriptorPool(logicalDevice, m_descriptorPool, nullptr);
+    for (auto& pool : m_descriptorPools) {
+        pool = nullptr;
+    }
+    //vkDestroyDescriptorPool(logicalDevice, m_descriptorPool, nullptr);
     vkDestroyPipeline(logicalDevice, m_vkPipeline, nullptr);
     m_swapChain = nullptr;
     m_renderPass = nullptr;
@@ -97,7 +97,8 @@ void Element::VknPipeline::createPipelineLayout() {
 
 void Element::VknPipeline::createDescriptorSetLayout() {
 
-    VkDescriptorSetLayoutCreateInfo layoutInfo = Element::VkInitializers::descriptorSetLayoutCreateInfo(bindingsData.data(), static_cast<uint32_t>(bindingsData.size()));
+    VkDescriptorSetLayoutCreateInfo layoutInfo =
+            Element::VkInitializers::descriptorSetLayoutCreateInfo(bindingsData.data(), static_cast<uint32_t>(bindingsData.size()));
 
     if (vkCreateDescriptorSetLayout(Device::getVkDevice(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor set layout!");
@@ -105,22 +106,31 @@ void Element::VknPipeline::createDescriptorSetLayout() {
 }
 
 void Element::VknPipeline::createDescriptorPool() {
-    uint32_t requireSetInfo = static_cast<uint32_t>(m_swapChain->getImageCount() * 10000);
-    std::vector<VkDescriptorPoolSize> poolSizes;
-    for (const auto& binding : bindingsData)
-    {
-        poolSizes.emplace_back(Element::VkInitializers::descriptorPoolSizeCreateInfo(binding.descriptorType,  requireSetInfo));
-    }
+//    uint32_t requireSetInfo = 0;
+//    std::vector<VkDescriptorPoolSize> poolSizes;
+//    for (const auto& binding : bindingsData)
+//    {
+//        auto descriptorCount = static_cast<uint32_t>
+//        (m_swapChain->getImageCount()*
+//         binding.descriptorCount);
+//        poolSizes.emplace_back(Element::VkInitializers::descriptorPoolSizeCreateInfo(binding.descriptorType,
+//                                                                                     descriptorCount));
+//        requireSetInfo += descriptorCount;
+//    }
+//
+//    VkDescriptorPoolCreateInfo poolInfo =
+//            VkInitializers::descriptorPoolCreateInfo(poolSizes.data(),
+//                                                     static_cast<uint32_t>(poolSizes.size()),
+//                                                     requireSetInfo);
+//
+//
+//    if (vkCreateDescriptorPool(Device::getVkDevice(), &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
+//        throw std::runtime_error("failed to create descriptor pool!");
+//    }
 
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = requireSetInfo;
+    m_descriptorPools.emplace_back(
+            VknResources::get().allocateDescriptorPool(m_pipelineData, m_swapChain->getImageCount()));
 
-    if (vkCreateDescriptorPool(Device::getVkDevice(), &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor pool!");
-    }
 }
 
 Element::PipelineData& Element::VknPipeline::GetPipelineData()
@@ -148,7 +158,7 @@ void Element::VknPipeline::createVknPipeline() {
     auto logicalDevice = Device::getVkDevice();
     const auto& physicalDevice = Device::GetPhysicalDevice()->GetSelectedDevice();
 
-    bool depthEnabled = GameSettings::Instance().depthEnabled;
+    bool depthEnabled = m_pipelineData.depthEnabled;
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = Element::VkInitializers::pipelineVertexInputCreateInfo(1);
 
@@ -159,17 +169,19 @@ void Element::VknPipeline::createVknPipeline() {
     vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
     vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
-    VkPipelineInputAssemblyStateCreateInfo inputAssembly = Element::VkInitializers::pipelineInputAssemblyCreateInfo();
-    VkPipelineViewportStateCreateInfo viewportState = Element::VkInitializers::pipelineViewportCreateInfo(nullptr, 1, nullptr, 1);
-    VkPipelineRasterizationStateCreateInfo rasterizer = Element::VkInitializers::pipelineRasterizerCreateInfo(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_POLYGON_MODE_FILL, depthEnabled ? VK_FALSE : VK_TRUE);
-    VkPipelineMultisampleStateCreateInfo multisampling = Element::VkInitializers::pipelineMultisamplerCreateInfo(physicalDevice.msaaSamples, VK_FALSE);  
-    VkPipelineDepthStencilStateCreateInfo depthStencil = Element::VkInitializers::pipelineDepthStencilCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, VK_FALSE, VK_FALSE);
-    VkPipelineColorBlendAttachmentState colorBlendAttachment = Element::VkInitializers::pipelineColourBlendAttachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
-    VkPipelineColorBlendStateCreateInfo colorBlending = Element::VkInitializers::pipelineColourBlendCreateInfo(&colorBlendAttachment, 1, VK_FALSE, VK_LOGIC_OP_COPY);
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkInitializers::pipelineInputAssemblyCreateInfo();
+    VkPipelineViewportStateCreateInfo viewportState = VkInitializers::pipelineViewportCreateInfo(nullptr, 1, nullptr, 1);
+    VkPipelineRasterizationStateCreateInfo rasterizer = VkInitializers::pipelineRasterizerCreateInfo(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_POLYGON_MODE_FILL, depthEnabled ? VK_FALSE : VK_TRUE);
+    VkPipelineMultisampleStateCreateInfo multisampling = VkInitializers::pipelineMultisamplerCreateInfo(physicalDevice.msaaSamples, VK_FALSE);
+    VkPipelineDepthStencilStateCreateInfo depthStencil = VkInitializers::pipelineDepthStencilCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, VK_FALSE, VK_FALSE);
+    VkPipelineColorBlendAttachmentState colorBlendAttachment = VkInitializers::pipelineColourBlendAttachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+    VkPipelineColorBlendStateCreateInfo colorBlending = VkInitializers::pipelineColourBlendCreateInfo
+            (&colorBlendAttachment, 1, VK_FALSE, VK_LOGIC_OP_COPY);
     std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-    VkPipelineDynamicStateCreateInfo dynamicState = Element::VkInitializers::dynamicStateCreateInfo(dynamicStateEnables);
 
-    VkGraphicsPipelineCreateInfo pipelineInfo = Element::VkInitializers::graphicsPipelineCreateInfo();
+    VkPipelineDynamicStateCreateInfo dynamicState = VkInitializers::dynamicStateCreateInfo(dynamicStateEnables);
+
+    VkGraphicsPipelineCreateInfo pipelineInfo = VkInitializers::graphicsPipelineCreateInfo();
     pipelineInfo.stageCount = shaderStages.size();
     pipelineInfo.pStages = shaderStages.data();
     pipelineInfo.pVertexInputState = &vertexInputInfo;
@@ -208,6 +220,18 @@ VkPipelineLayout Element::VknPipeline::GetVkPipelineLayout()
 VkDescriptorPool Element::VknPipeline::GetVkDescriptorPool()
 {
     return m_descriptorPool;
+}
+
+VkDescriptorPool Element::VknPipeline::allocateDescriptorPool(uint32_t descriptorCount) {
+
+    for (auto& pool : m_descriptorPools) {
+        if (!pool->isFull(descriptorCount))
+            return pool->getVkDescriptorPool();
+    }
+
+    auto& pool = m_descriptorPools.emplace_back(VknResources::get().allocateDescriptorPool(
+            m_pipelineData, m_swapChain->getImageCount()));
+    return pool->getVkDescriptorPool();
 }
 
 //const VkDescriptorSetLayout Element::VknPipeline::GetVkDescriptorSetLayout() const

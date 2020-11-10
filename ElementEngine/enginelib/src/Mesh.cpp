@@ -1,27 +1,26 @@
 #include "Mesh.h"
 
-void Element::Mesh::LoadMesh(std::string mesh)
+void Element::Mesh::Load()
 {
-	Resources::LoadMeshData(mesh, data);
     hasIndices = true;
 	createVertexBuffer();
 	createIndexBuffer();
 }
 
-void Element::Mesh::generateFromVertices(const std::vector<Vertex>& vertices)
+void Element::Mesh::generateFromVertices(const std::vector<Vertex>& _vertices)
 {
-    data.vertices = vertices;
+    vertices = _vertices;
     hasIndices = false;
     createVertexBuffer();
 }
 
-void Element::Mesh::generateFromVertices(Vertex* vertices, int verticesCount)
+void Element::Mesh::generateFromVertices(Vertex* _vertices, int verticesCount)
 {
-    data.vertices.resize(verticesCount);
+    vertices.resize(verticesCount);
 
     for (size_t i = 0; i < verticesCount; i++)
     {
-        data.vertices[i] = vertices[i];
+        vertices[i] = _vertices[i];
     }
     hasIndices = false;
     createVertexBuffer();
@@ -29,10 +28,10 @@ void Element::Mesh::generateFromVertices(Vertex* vertices, int verticesCount)
 
 void Element::Mesh::createVertexBuffer()
 {
-	VkDeviceSize bufferSize = sizeof(data.vertices[0]) * data.vertices.size();
+	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
 	Buffer stagingBuffer(bufferSize);
-	stagingBuffer.MapCopyMemory(data.vertices.data());
+	stagingBuffer.MapCopyMemory(vertices.data());
 
 	m_vertexBuffer.Create(bufferSize, 0, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
@@ -43,10 +42,10 @@ void Element::Mesh::createVertexBuffer()
 
 void Element::Mesh::createIndexBuffer()
 {
-	VkDeviceSize bufferSize = sizeof(data.indices[0]) * data.indices.size();
+	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
 	Buffer stagingBuffer(bufferSize);
-	stagingBuffer.MapCopyMemory(data.indices.data());
+	stagingBuffer.MapCopyMemory(indices.data());
 
 	m_indexBuffer.Create(bufferSize, 0, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
@@ -54,7 +53,7 @@ void Element::Mesh::createIndexBuffer()
 	stagingBuffer.Destroy();
 }
 
-void Element::Mesh::Destroy()
+void Element::Mesh::destroy()
 {
 	m_indexBuffer.Destroy();
 	m_vertexBuffer.Destroy();
@@ -71,7 +70,7 @@ void Element::Mesh::bind(VkCommandBuffer vkCommandBuffer, VkDeviceSize* offsets)
 void Element::Mesh::draw(VkCommandBuffer vkCommandBuffer)
 {
     if (hasIndices)
-        vkCmdDrawIndexed(vkCommandBuffer, static_cast<uint32_t>(data.indices.size()), 1, 0, 0, 0);
+        vkCmdDrawIndexed(vkCommandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
     else
-        vkCmdDraw(vkCommandBuffer, static_cast<uint32_t>(data.vertices.size()), 1, 0, 0);
+        vkCmdDraw(vkCommandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 }

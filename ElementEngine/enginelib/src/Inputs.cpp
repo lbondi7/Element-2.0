@@ -13,11 +13,11 @@ float Element::Inputs::getCursorPos(int axis)
 	return static_cast<float>(value);
 }
 
-glm::vec2 Element::Inputs::getCursorPos()
+Vec2 Element::Inputs::getCursorPos()
 {
 	double x, y;
 	glfwGetCursorPos(window, &x, &y);
-	return glm::vec2(static_cast<float>(x), static_cast<float>(y));
+	return Vec2(static_cast<float>(x), static_cast<float>(y));
 }
 
 bool Element::Inputs::keyDown(int _key, int mod)
@@ -32,7 +32,7 @@ bool Element::Inputs::keyUp(int _key, int mod)
 
 bool Element::Inputs::keyHeld(int _key, int mod)
 {
-	return key(_key, GLFW_REPEAT, mod);
+	return glfwGetKey(window, _key) != GLFW_RELEASE;
 }
 
 bool Element::Inputs::key(int key, int action, int mod)
@@ -88,9 +88,9 @@ bool Element::Inputs::scrollDown(int axis)
 
 double Element::Inputs::scroll(int axis)
 {
-	for (int i = 0; i < events.size(); ++i)
+	for (auto & i : events)
 	{
-		const auto& event = dynamic_cast<ScrollEvent*>(events[i].get());
+		const auto& event = dynamic_cast<ScrollEvent*>(i.get());
 		if (!event)
 			continue;
 

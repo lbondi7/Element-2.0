@@ -6,7 +6,7 @@
 #include <fstream>
 
 
-VkDescriptorType Element::VkFunctions::getDescriptorType(DescriptorType type)
+VkDescriptorType Element::VkFunctions::getDescriptorType(BindObjectType type)
 {
     return static_cast<VkDescriptorType>(type);
 }

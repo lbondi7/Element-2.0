@@ -30,7 +30,7 @@ namespace Element {
 	{
 	public:
 
-		static Debugger& Get() {
+		static Debugger& get() {
 			static Debugger debugger;
 			return debugger;
 		}

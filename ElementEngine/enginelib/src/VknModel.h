@@ -15,6 +15,8 @@ namespace Element {
 
         VknModel(VknPipeline *pipeline, uint32_t imageCount);
 
+        VknModel(VknPipeline *pipeline, uint32_t imageCount, std::vector<Buffer>& cameraBuffers);
+
         ~VknModel() override;
 
         Mesh *GetMesh() override;
@@ -64,16 +66,18 @@ namespace Element {
 
         void reInit(uint32_t imageCount);
 
-        std::unique_ptr<DescriptorSet> descriptorSet;
+        DescriptorSet* descriptorSet;
 
 
     private:
+        std::vector<void*> data;
         std::vector<Buffer> uniformBuffers;
-
         EntityState entityState;
         EntityState prevEntityState;
 
         VknPipeline *oldPipeline;
         DirtyFlags dirty = DirtyFlags::CLEAN;
+
+        void init(VknPipeline *_pipeline, uint32_t imageCount, std::vector<Buffer> &cameraBuffers);
     };
 }

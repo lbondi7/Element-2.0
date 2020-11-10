@@ -16,17 +16,17 @@ Element::Transform& Element::Model::GetTransform() noexcept
 	return transform;
 }
 
-const glm::vec3& Element::Model::Position() const noexcept
+const Vec3& Element::Model::Position() const noexcept
 {
 	return transform.getPosition();
 }
 
-const glm::vec3& Element::Model::Rotation() const noexcept
+const Vec3& Element::Model::Rotation() const noexcept
 {
 	return transform.getRotation();
 }
 
-const glm::vec3& Element::Model::Scale() const noexcept
+const Vec3& Element::Model::Scale() const noexcept
 {
 	return transform.getScale();
 }

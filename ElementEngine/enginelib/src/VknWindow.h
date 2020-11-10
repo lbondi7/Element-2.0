@@ -18,8 +18,8 @@ namespace Element {
 		void setResizeCallback() override;
 		void setUserPointer(void* pointer) override;
 		GLFWwindow* GetGLFWWindow() override;
-		glm::vec2 getSize() override;
-		glm::vec2 getPosition() override;
+		Vec2 getSize() override;
+		Vec2 getPosition() override;
 		void setCurrentMonitor(int _monitor) override;
 		void setMode(WindowMode _mode) override;
 		void setSize(int _width, int _height) override;

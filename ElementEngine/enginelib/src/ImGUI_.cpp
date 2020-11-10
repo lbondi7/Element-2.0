@@ -1,8 +1,10 @@
 #include "ImGUI_.h"
 
 #include "VkFunctions.h"
-#include "Shader.h"
+#include "Resources.h"
+#include "Locator.h"
 #include <element/Debugger.h>
+#include <element/Inputs.h>
 
 #include <imgui.h>
 //#include "imgui/imgui.h"
@@ -204,12 +206,13 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 
 	pipelineCreateInfo.pVertexInputState = &vertexInputState;
 
-	Shader vert, frag;
-	vert.Load(Element::Shader::ShaderType::VERTEX, "ui");
-	frag.Load(Element::Shader::ShaderType::FRAGMENT, "ui");
+	const auto& vert = Locator::getResource()->shader("ui", ShaderType::VERTEX);
+    const auto& frag = Locator::getResource()->shader("ui", ShaderType::FRAGMENT);
 
-	shaderStages[0] = Element::VkInitializers::pipelineShaderStageCreateInfo(vert.GetVkShaderModule(), vert.GetVkShaderStageFlag(), "main");
-	shaderStages[1] = Element::VkInitializers::pipelineShaderStageCreateInfo(frag.GetVkShaderModule(), frag.GetVkShaderStageFlag(), "main");
+	shaderStages[0] = Element::VkInitializers::pipelineShaderStageCreateInfo(vert->GetVkShaderModule(),
+                                                                          vert->GetVkShaderStageFlag(), "main");
+	shaderStages[1] = Element::VkInitializers::pipelineShaderStageCreateInfo(frag->GetVkShaderModule(),
+                                                                          frag->GetVkShaderStageFlag(), "main");
 
 	if (vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline) != VK_SUCCESS) {
 		throw std::runtime_error("ImGui - failed to create graphics pipeline!");
@@ -447,4 +450,17 @@ void Element::ImGUI::deint()
 bool Element::ImGUI::isPrepared()
 {
 	return prepared;
+}
+
+void Element::ImGUI::updateMouse(float windowWidth, float windowHeight) {
+    ImGuiIO& io = ImGui::GetIO();
+
+    io.DisplaySize = ImVec2(windowWidth, windowHeight);
+
+    auto mousePos = Inputs::get().getCursorPos();
+    io.MousePos = ImVec2(mousePos.x, mousePos.y);
+    //Debugger::Get().log("Mouse X", io.MousePos.x);
+    //Debugger::Get().log("Mouse y", io.MousePos.y);
+    io.MouseDown[0] = Inputs::get().buttonDown(Element::MOUSE_BUTTON::LEFT) || Inputs::get().buttonHeld(Element::MOUSE_BUTTON::LEFT);
+    io.MouseDown[1] = Inputs::get().buttonDown(Element::MOUSE_BUTTON::RIGHT);
 }

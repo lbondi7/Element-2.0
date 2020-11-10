@@ -5,7 +5,6 @@
 
 #include <memory>
 
-
 namespace Element {
 
 	class Engine
@@ -20,16 +19,13 @@ namespace Element {
 	protected:
 		explicit Engine() = default;
 		virtual ~Engine() = default;
-
-		virtual void beginFrame() = 0;
-		virtual void renderFrame() = 0;
-		virtual void endFrame() = 0;
-		virtual void start() = 0;
-
 		std::unique_ptr<Renderer> m_renderer;
 
-
 	private:
+		void beginFrame();
+		void renderFrame();
+		void endFrame();
+		void start();
 	};
 
 }

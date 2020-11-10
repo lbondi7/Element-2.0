@@ -4,11 +4,13 @@
 #include "VknRenderPass.h"
 #include "VknSwapChain.h"
 #include "Shader.h"
-#include <element/ElementConstants.h>
 #include "Pipeline.h"
 
+#include <element/ElementConstants.h>
+
 #include "PipelineData.h"
-#include "DescriptorInfo.h"
+#include "ShaderInfo.h"
+#include "VknDescriptorPool.h"
 
 #include <vector>
 
@@ -36,6 +38,8 @@ namespace Element {
 		VkPipelineLayout GetVkPipelineLayout();
 		VkDescriptorPool GetVkDescriptorPool();
 
+		VkDescriptorPool allocateDescriptorPool(uint32_t descriptorCount);
+
 		void createVknPipeline();
 
 		void createDescriptorSetLayout();
@@ -55,8 +59,8 @@ namespace Element {
 		const std::string& getName();
 
 	private:
-		SwapChain* m_swapChain{};
-		RenderPass* m_renderPass{};
+		SwapChain* m_swapChain;
+		RenderPass* m_renderPass;
 		VkDescriptorSetLayout m_descriptorSetLayout{};
 		VkPipelineLayout m_pipelineLayout{};
 		VkPipeline m_vkPipeline{};
@@ -65,6 +69,8 @@ namespace Element {
 		PipelineData m_pipelineData;
 		bool flushed = false;
 		bool bound = false;
+
+		std::vector<VknDescriptorPool*> m_descriptorPools;
 
 		std::string name;
 	};

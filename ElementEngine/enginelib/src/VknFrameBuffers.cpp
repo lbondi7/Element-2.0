@@ -17,7 +17,7 @@ void Element::FrameBuffers::init(SwapChain* swapChain, VkRenderPass vkRenderPass
     m_vkFrameBuffers.resize(swapChain->getImageCount());
     const auto& samples = Device::GetPhysicalDevice()->GetSelectedDevice().msaaSamples;
     bool isMSAAx1 = samples & VK_SAMPLE_COUNT_1_BIT;
-    bool depthEnabled = GameSettings::Instance().depthEnabled;
+    bool depthEnabled = GameSettings::get().depthEnabled;
 
     for (size_t i = 0; i < swapChain->getImageCount(); i++) {
 

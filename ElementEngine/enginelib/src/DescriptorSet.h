@@ -1,11 +1,12 @@
 #pragma once
 
 #include "VknConstants.h"
-#include "VknPipeline.h"
 #include "Buffer.h"
-#include "DefaultResources.h"
+#include "Texture.h"
 
 namespace Element{
+
+    class VknPipeline;
 
 	class DescriptorSet
 	{
@@ -16,7 +17,9 @@ namespace Element{
 
 		void init(VknPipeline* _pipeline, uint32_t imageCount);
 
-		void update(void* _uniformBuffers, void* _texture);
+		void update(std::vector<void*>& data);
+
+        void update();
 
 		void update(const std::vector<Buffer>& _uniformBuffers, const Texture* _texture);
 
@@ -27,9 +30,8 @@ namespace Element{
 		VknPipeline* getPipeline();
 
 		std::vector<VkDescriptorSet> descriptorSets;
-
+        std::vector<void*> data;
 	private:
-
 		uint32_t count;
 		VknPipeline* pipeline;
 	};

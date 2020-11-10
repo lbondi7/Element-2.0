@@ -2,6 +2,8 @@
 
 #include "ElementConstants.h"
 
+#include "Transform2D.h"
+
 namespace Element {
 
 	class Mesh;
@@ -11,8 +13,8 @@ namespace Element {
 	class Sprite
 	{
 	public:
-		Sprite() = default;
-		//Sprite(Pipeline* pipeline, Mesh* mesh);
+		Sprite();
+        Sprite(VknPipeline* pipeline, Mesh* mesh, uint32_t imageCount);
 		virtual ~Sprite() = default;
 
 		bool operator==(const Sprite& other) {
@@ -24,23 +26,20 @@ namespace Element {
 		virtual Texture* GetTexture() noexcept = 0;
 		virtual VknPipeline* GetPipeline() noexcept = 0;
 
-		virtual const Mesh* GetMesh() const = 0;
-		virtual const Texture* GetTexture() const noexcept = 0;
-		virtual const VknPipeline* GetPipeline() const noexcept = 0;
+        [[nodiscard]] virtual const Mesh* GetMesh() const = 0;
+		[[nodiscard]] virtual const Texture* GetTexture() const noexcept = 0;
+		[[nodiscard]] virtual const VknPipeline* GetPipeline() const noexcept = 0;
 
 		virtual void SetTexture(Texture* texture, bool keepSize = true) = 0;
 		virtual void SetPipeline(VknPipeline* pipeline) = 0;
-		virtual const VknPipeline* GetOldPipeline() const noexcept = 0;
-		//virtual void setEntityState(EntityState state) = 0;
-		//virtual EntityState getEntityState() = 0;
-
+        [[nodiscard]] virtual const VknPipeline* GetOldPipeline() const noexcept = 0;
 
 		void SetTransform(const Transform2D& other);
 
 		const Transform2D& GetTransform() const noexcept;
 		Transform2D& GetTransform() noexcept;
 
-		uint32_t getId() const;
+        [[nodiscard]] uint32_t getId() const;
 
 	protected:
 
@@ -48,7 +47,6 @@ namespace Element {
 		Texture* m_texture;
 		VknPipeline* m_pipeline;
 		Transform2D transform;
-		bool screenSpace = true;
 		uint32_t id;
 
 	};

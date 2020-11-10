@@ -61,7 +61,7 @@ VkSampleCountFlagBits Element::PhysicalDevice::getMaxUsableSampleCount(const Ele
 
     VkSampleCountFlags counts = data.m_properties.limits.framebufferColorSampleCounts & data.m_properties.limits.framebufferDepthSampleCounts;
 
-    auto& instance = GameSettings::Instance();
+    auto& instance = GameSettings::get();
     int multisample = static_cast<int>(instance.msaaLevel);
     if (multisample >= 6 && counts & VK_SAMPLE_COUNT_64_BIT) { 
         instance.msaaLevel = GameSettings::Multisample::MSAA_64;  

@@ -9,7 +9,7 @@ namespace Element {
 
 	namespace VkFunctions
 	{
-		VkDescriptorType getDescriptorType(DescriptorType type);
+		VkDescriptorType getDescriptorType(BindObjectType type);
 
 
 		uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);

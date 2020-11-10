@@ -1,13 +1,15 @@
 #include "VknRenderer.h"
 
-#include "VkInitializers.h"
-#include "DefaultResources.h"
-#include <element/Utilities.h>
-#include <element/GameSettings.h>
+#include "Utilities.h"
+#include "VknResources.h"
+#include "Locator.h"
+#include "Resources.h"
+#include "Device.h"
+#include "VkFunctions.h"
+
+
 #include <element/Debugger.h>
 #include <element/Inputs.h>
-
-#include <imgui.h>
 
 #include <stdexcept>
 #include <memory>
@@ -38,6 +40,8 @@ void Element::VknRenderer::init()
 {
     window = std::make_unique<VknWindow>();
 
+    Inputs::get().init(window->GetGLFWWindow());
+
     instance = std::make_unique<Instance>();
 
     createSurface();
@@ -46,45 +50,23 @@ void Element::VknRenderer::init()
     Device::setupPhysicalDevice(instance->GetVkInstance(), surface);
     Device::setupLogicalDevice(surface);
 
-    //Resources::LoadMaterialData("");
+    Locator::initResources(std::make_unique<Resources>());
 
-    DefaultResources::init();
-    std::vector<std::string> meshNames{ "cube.obj", "quad.obj", "error.obj" };
-    for (const auto& mesh : meshNames)
-    {
-        std::string name = Element::Utilities::extractName(mesh);
-        meshes.emplace(name, std::make_unique<Mesh>());
-        meshes[name]->LoadMesh(mesh);
-    }
-
-    std::vector<std::string> texts{ "default.jpg", "texture.jpg" };
-    for (const auto& texture : texts)
-    {
-        loadTexture(texture);
-    }
+    Maths::Vec3 vector = Maths::Vec3();
+    Debugger::get().log(vector.r);
 
     createRenderer();
 
     const auto& device = Device::GetPhysicalDevice()->GetSelectedDevice();
-    Debugger::Get().log("Heap Size", static_cast<float>(device.m_memoryProperties.memoryHeaps->size));
-    Debugger::Get().log("Heap Count", static_cast<float>(device.m_memoryProperties.memoryHeapCount));
-    Debugger::Get().log("Heap Index", static_cast<float>(device.m_memoryProperties.memoryTypes->heapIndex));
-    Debugger::Get().log("Type Count", static_cast<float>(device.m_memoryProperties.memoryTypeCount));
+    Debugger::get().log("Heap Size", static_cast<float>(device.m_memoryProperties.memoryHeaps->size));
+    Debugger::get().log("Heap Count", static_cast<float>(device.m_memoryProperties.memoryHeapCount));
+    Debugger::get().log("Heap Index", static_cast<float>(device.m_memoryProperties.memoryTypes->heapIndex));
+    Debugger::get().log("Type Count", static_cast<float>(device.m_memoryProperties.memoryTypeCount));
 }
 
 void Element::VknRenderer::deInit()
 {
     cleanupRenderer();
-
-    for (const auto& model : meshes)
-    {
-        model.second->Destroy();
-    }
-    for (const auto& model : texs)
-    {
-        model.second->destroy();
-    }
-    DefaultResources::deinit();
 
     debugRenderer->deint();
 
@@ -115,23 +97,24 @@ void Element::VknRenderer::beginFrame()
 
 void Element::VknRenderer::renderFrame()
 {
-    ImGuiIO& io = ImGui::GetIO();
+//    ImGuiIO& io = ImGui::GetIO();
+//
+//    io.DisplaySize = ImVec2(window->getSize().x, window->getSize().y);
+//
+//    auto mousePos = Inputs::Get().getCursorPos();
+//    io.MousePos = ImVec2(mousePos.x, mousePos.y);
+//    //Debugger::Get().log("Mouse X", io.MousePos.x);
+//    //Debugger::Get().log("Mouse y", io.MousePos.y);
+//    io.MouseDown[0] = Inputs::Get().buttonDown(Element::MOUSE_BUTTON::LEFT) || Inputs::Get().buttonHeld(Element::MOUSE_BUTTON::LEFT);
+//    io.MouseDown[1] = Inputs::Get().buttonDown(Element::MOUSE_BUTTON::RIGHT);
 
-    io.DisplaySize = ImVec2(window->getSize().x, window->getSize().y);
-
-    auto mousePos = Inputs::Get().getCursorPos();
-    io.MousePos = ImVec2(mousePos.x, mousePos.y);
-    //Debugger::Get().log("Mouse X", io.MousePos.x);
-    //Debugger::Get().log("Mouse y", io.MousePos.y);
-    io.MouseDown[0] = Inputs::Get().buttonDown(Element::MOUSE_BUTTON::LEFT) || Inputs::Get().buttonHeld(Element::MOUSE_BUTTON::LEFT);
-    io.MouseDown[1] = Inputs::Get().buttonDown(Element::MOUSE_BUTTON::RIGHT);
     CheckModels();
     CheckSprites();
 
     //if (rebuildCmdBuffers || debugRenderer->isInvalid())
         rebuildCommandBuffers();
 
-    camera->update(window->getSize().x, window->getSize().y);
+    camera->update(window->getSize().x, window->getSize().y, swapChain->CurrentImageIndex());
     updateUniformBuffers();
     camera->setCameraChanged(false);
 }
@@ -192,17 +175,20 @@ void Element::VknRenderer::createRenderer() {
 
     swapChain = std::make_unique<SwapChain>(window->GetGLFWWindow(), surface);
     renderPass = std::make_unique<RenderPass>(swapChain.get());
-    m_shaderManager = std::make_unique<ShaderManager>();
+    //m_shaderManager = std::make_unique<ShaderManager>();
+
+    m_pipelineManager = std::make_unique<PipelineManager>(swapChain.get(), renderPass.get());
 
     PipelineData pipelineData{};
-    pipelineData.descriptorInfo.push_back({ DescriptorType::STATIC_UNIFORM_BUFFER, Shader::ShaderType::VERTEX, 0 });
-    pipelineData.descriptorInfo.push_back({ DescriptorType::IMAGE, Shader::ShaderType::FRAGMENT, 1 });
-    pipelineData.shaders = { m_shaderManager->GetShader(Shader::ShaderType::VERTEX, "shader"), m_shaderManager->GetShader(Shader::ShaderType::FRAGMENT, "shader") };
-    m_pipelineManager = std::make_unique<PipelineManager>(swapChain.get(), renderPass.get(), &pipelineData);
+    pipelineData.shaderInfo.push_back({BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
+                                       "shader", 0, 1000 });
+    pipelineData.shaderInfo.push_back({BindObjectType::IMAGE, ShaderType::FRAGMENT, "shader", 1, 1000 });
 
-    pipelineData.descriptorInfo.pop_back();
-    pipelineData.shaders = { m_shaderManager->GetShader(Shader::ShaderType::VERTEX, "shader2"), m_shaderManager->GetShader(Shader::ShaderType::FRAGMENT, "shader2") };
-    m_pipelineManager->generatePipeline("red", &pipelineData);
+    m_pipelineManager->generatePipeline("default", pipelineData);
+
+    pipelineData.shaderInfo[0].shader = "shader2";
+    pipelineData.shaderInfo[1].shader = "shader2";
+    m_pipelineManager->generatePipeline("red", pipelineData);
 
     graphicsCommandPool = std::make_unique<CommandPool>();
     commandBuffers.resize(swapChain->getImageCount());
@@ -224,7 +210,7 @@ void Element::VknRenderer::signalExit()
 void Element::VknRenderer::cleanupSwapChain() {
 
     vkDeviceWaitIdle(Device::getVkDevice());
-
+    VknResources::get().destroy();
     swapChain->DestroyDepthResource();
     swapChain->DestroyColourResource();
 
@@ -232,6 +218,8 @@ void Element::VknRenderer::cleanupSwapChain() {
     renderPass->Destroy();
 
     swapChain->Destroy();
+
+    Locator::deInit();
 }
 
 void Element::VknRenderer::cleanupRenderer() {
@@ -250,7 +238,6 @@ void Element::VknRenderer::cleanupRenderer() {
     }
 
     m_pipelineManager->destroy();
-    m_shaderManager->Destroy();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(logicalDevice, presentSemaphores[i], nullptr);
@@ -265,7 +252,8 @@ void Element::VknRenderer::rebuildCommandBuffers() {
 
     vkDeviceWaitIdle(Device::getVkDevice());
     //Debugger::Get().startTimer("commandBuffers");
-    debugRenderer->update();
+    const auto& windowSize = window->getSize();
+    debugRenderer->update(windowSize.x, windowSize.y);
 
     for (size_t i = 0; i < commandBuffers.size(); i++) {
 
@@ -282,25 +270,23 @@ void Element::VknRenderer::rebuildCommandBuffers() {
         {
             viewport.x = 0.0f;
             viewport.y = 0.0f;
-            viewport.width = static_cast<float>(window->getSize().x);
-            viewport.height = static_cast<float>(window->getSize().y);
+            viewport.width = static_cast<float>(windowSize.x);
+            viewport.height = static_cast<float>(windowSize.y);
 
             scissorRect.offset = { 0, 0 };
             scissorRect.extent = { swapChain->Extent().width,  swapChain->Extent().height };
         }
         else
         {
-            float xy = window->getSize().x;
-            float yx = camera->GetViewport().x;
-            viewport.x = yx * xy;
-            viewport.y = camera->GetViewport().y * window->getSize().y;
-            viewport.width = static_cast<float>(camera->GetViewport().z * window->getSize().x);
-            viewport.height = static_cast<float>(camera->GetViewport().w * window->getSize().y);
+            viewport.x = camera->getViewport().x * windowSize.x;
+            viewport.y = camera->getViewport().y * windowSize.y;
+            viewport.width = static_cast<float>(camera->getViewport().z * windowSize.x);
+            viewport.height = static_cast<float>(camera->getViewport().w * windowSize.y);
 
-            scissorRect.offset = { static_cast<int>(camera->GetRect().x * window->getSize().x),
-                                   static_cast<int>(camera->GetRect().y * window->getSize().y) };
-            scissorRect.extent = { static_cast<uint32_t>(camera->GetRect().z * window->getSize().x),
-                                   static_cast<uint32_t>(camera->GetRect().w * window->getSize().y) };
+            scissorRect.offset = { static_cast<int>(camera->getRect().x * windowSize.x),
+                                   static_cast<int>(camera->getRect().y * windowSize.y) };
+            scissorRect.extent = { static_cast<uint32_t>(camera->getRect().z * windowSize.x),
+                                   static_cast<uint32_t>(camera->getRect().w * windowSize.y) };
         }
 
         vkCmdSetViewport(vkCmdBuffer, 0, 1, &viewport);
@@ -313,10 +299,11 @@ void Element::VknRenderer::rebuildCommandBuffers() {
                 continue;
 
             m_pipelineManager->BindPipeline(model->GetPipeline(), vkCmdBuffer);
-            vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, model->GetPipeline()->GetVkPipelineLayout(), 0, 1,
+            vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                    model->GetPipeline()->GetVkPipelineLayout(), 0, 1,
                                     &model->descriptorSet->descriptorSets[i], 0, nullptr);
             BindMesh(model->GetMesh(), vkCmdBuffer);
-            vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(model->GetMesh()->data.indices.size()), 1, 0, 0, 0);
+            vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(model->GetMesh()->indices.size()), 1, 0, 0, 0);
 
             ++j;
         }
@@ -330,11 +317,11 @@ void Element::VknRenderer::rebuildCommandBuffers() {
             m_pipelineManager->BindPipeline(sprite->GetPipeline(), vkCmdBuffer);
             vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, sprite->GetPipeline()->GetVkPipelineLayout(), 0, 1, &sprite->descriptorSet->descriptorSets[i], 0, nullptr);
             BindMesh(sprite->GetMesh(), vkCmdBuffer);
-            vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(sprite->GetMesh()->data.indices.size()), 1, 0, 0, 0);
+            vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(sprite->GetMesh()->indices.size()), 1, 0, 0, 0);
             ++j;
         }
 
-        UnbindMeshes();
+        Locator::getResource()->unbindMeshes();
         m_pipelineManager->UnbindPipelines();
 
         debugRenderer->draw(vkCmdBuffer);
@@ -353,14 +340,9 @@ void Element::VknRenderer::BindMesh(Element::Mesh* mesh, VkCommandBuffer command
     if (mesh->bound)
         return;
 
-    UnbindMeshes();
+    Locator::getResource()->unbindMeshes();
     VkDeviceSize offsets[] = { 0 };
     mesh->bind(commandBuffer, offsets);
-}
-
-void Element::VknRenderer::UnbindMeshes() {
-    for (auto& mesh : meshes)
-        mesh.second->bound = false;
 }
 
 void Element::VknRenderer::createSyncObjects() {
@@ -430,7 +412,8 @@ void Element::VknRenderer::updateUniformBuffers()
         if (!model)
             continue;
 
-        model->updateUniformBuffers(camera->hasCameraChanged(), camera->GetViewMatrix(), camera->GetProjectionMatrix(), swapChain->CurrentImageIndex());
+        model->updateUniformBuffers(camera->hasCameraChanged(), camera->getViewMatrix(),
+                                    camera->getProjMatrix(), swapChain->CurrentImageIndex());
         model->setDirty(DirtyFlags::CLEAN);
         model->setEntityState(model->getEntityState() == EntityState::RENDERED ? EntityState::READY_TO_RENDER : EntityState::NOT_RENDERED);
     }
@@ -440,7 +423,8 @@ void Element::VknRenderer::updateUniformBuffers()
         if (!sprite)
             continue;
 
-        sprite->updateUniformBuffers(camera->hasCameraChanged(), camera->GetViewMatrix(), camera->GetProjectionMatrix(), swapChain->CurrentImageIndex());
+        sprite->updateUniformBuffers(camera->hasCameraChanged(), camera->getViewMatrix(),
+                                     camera->getProjMatrix(), swapChain->CurrentImageIndex());
         sprite->setDirty(DirtyFlags::CLEAN);
         sprite->setEntityState(sprite->getEntityState() == EntityState::RENDERED ? EntityState::READY_TO_RENDER : EntityState::NOT_RENDERED);
     }
@@ -449,12 +433,12 @@ void Element::VknRenderer::updateUniformBuffers()
 
 Element::Mesh* Element::VknRenderer::getMesh(const std::string& name)
 {
-    return meshes[name].get();
+    return Locator::getResource()->mesh(name);
 }
 
 Element::Texture* Element::VknRenderer::getTexture(const std::string& name)
 {
-    return texs[name].get();
+    return Locator::getResource()->texture(name);
 }
 
 //Element::VknPipeline* Element::VknRenderer::getPipeline(const std::string& name)
@@ -470,7 +454,12 @@ Element::Window* Element::VknRenderer::getWindow()
 Element::Model* Element::VknRenderer::createModel()
 {
     auto& model = vknModels.emplace_back();
-    model = std::make_unique<VknModel>(m_pipelineManager->getDefaultPipeline(), swapChain->getImageCount());
+    model = std::make_unique<VknModel>(m_pipelineManager->getPipeline("default"), swapChain->getImageCount());
+//    model->descriptorSet = VknResources::get().allocateDescriptorSet();
+//    model->descriptorSet->init(model->GetPipeline(), swapChain->getImageCount());
+//
+//   // std::vector<void*>data{model->GetUniformBuffers().data(), model->GetTexture()};
+//    model->descriptorSet->update(model->GetUniformBuffers(), model->GetTexture());
     return dynamic_cast<Model*>(model.get());
     //return new VknModel(m_pipelineManager->getDefaultPipeline());
 }
@@ -478,32 +467,25 @@ Element::Model* Element::VknRenderer::createModel()
 Element::Sprite* Element::VknRenderer::createNewSprite()
 {
     auto& sprite = vknSprites.emplace_back();
-    sprite = std::make_unique<VknSprite>(m_pipelineManager->getDefaultPipeline(), meshes["quad"].get(), swapChain->getImageCount());
+    sprite = std::make_unique<VknSprite>(m_pipelineManager->getDefaultPipeline(), Locator::getResource()->mesh("quad"),
+                                         swapChain->getImageCount());
     return dynamic_cast<Sprite*>(sprite.get());
-   // return new VknSprite(m_pipelineManager->getDefaultPipeline(), models["quad"].get(), swapChain->getImageCount());
 }
 
 Element::Camera* Element::VknRenderer::createCamera(Element::CameraType type)
 {
-    return new Camera(type);
+    return dynamic_cast<Camera*>(new EleCamera(type));
 }
 
-void Element::VknRenderer::loadTexture(const std::string& texture)
+void Element::VknRenderer::setClearColour(const Vec3& clearCol)
 {
-    std::string name = Element::Utilities::extractName(texture);
-    texs.emplace(name, std::make_unique<Texture>());
-    texs[name]->Load(texture);
-}
-
-void Element::VknRenderer::setClearColour(const glm::vec3& clearCol)
-{
-    renderPass->setClearColour(clearCol);
+    renderPass->setClearColour(Utilities::vec3RefToGlmvec3(clearCol));
     window->setFramebufferResized(true);
 }
 
-void Element::VknRenderer::setClearColourNormalised(const glm::vec3& clearCol)
+void Element::VknRenderer::setClearColourNormalised(const Vec3& clearCol)
 {
-    glm::vec3 temp = clearCol;
+    auto temp = Utilities::vec3RefToGlmvec3(clearCol);
 
     temp.r = (temp.r - 0.0f) / (255.0f - 0.0f);
     temp.g = (temp.g - 0.0f) / (255.0f - 0.0f);
@@ -511,4 +493,10 @@ void Element::VknRenderer::setClearColourNormalised(const glm::vec3& clearCol)
 
     renderPass->setClearColour(temp);
     window->setFramebufferResized(true);
+}
+
+void Element::VknRenderer::setCamera(Element::Camera* _camera)
+{
+    camera = reinterpret_cast<EleCamera *>(_camera);
+    camera->setReady(true);
 }

@@ -2,6 +2,8 @@
 
 #include "VknConstants.h"
 
+#include <element/ElementConstants.h>
+
 #include <string>
 
 namespace Element {
@@ -10,12 +12,6 @@ namespace Element {
 	{
 	public:
 
-		enum class ShaderType : int {
-			VERTEX = 0,
-			FRAGMENT = 1,
-			GEOMETRY = 2,
-		};
-
 		Shader() = default;
 		Shader(ShaderType type, std::string file);
 		~Shader();
@@ -23,26 +19,27 @@ namespace Element {
 		bool operator==(const Shader& other)
 		{
 			return m_shaderType == other.m_shaderType &&
-				name == other.name;
+				name == other.name &&
+				m_module == other.m_module;
 		}
 
 		Shader& operator=(const Shader& other)
 		{
-			m_shaderType = other.m_shaderType;
-			name = other.name;
-			m_module = other.m_module;
+			this->m_shaderType = other.m_shaderType;
+			this->name = other.name;
+			this->m_module = other.m_module;
 			return *this;
 		}
 
 
 		void Load(ShaderType type, std::string file);
-		void Destroy();
+		void destroy();
 
 		void SetShaderType(ShaderType type);
-		ShaderType GetShaderType();
+		[[nodiscard]] ShaderType GetShaderType() const;
 
-		VkShaderModule GetVkShaderModule();
-		VkShaderStageFlagBits GetVkShaderStageFlag();
+		[[nodiscard]] VkShaderModule GetVkShaderModule() const;
+		[[nodiscard]] VkShaderStageFlagBits GetVkShaderStageFlag() const;
 
 		static VkShaderStageFlagBits GetVkShaderStageFlag(ShaderType type);
 

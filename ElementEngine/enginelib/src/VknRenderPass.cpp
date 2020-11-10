@@ -33,7 +33,7 @@ void Element::RenderPass::createVkRenderPass() {
     const auto& samples = Device::GetPhysicalDevice()->GetSelectedDevice().msaaSamples;
 
     bool isMSAAx1 = samples & VK_SAMPLE_COUNT_1_BIT;
-    bool depthEnabled = GameSettings::Instance().depthEnabled;
+    bool depthEnabled = GameSettings::get().depthEnabled;
 
     VkAttachmentDescription colorAttachment = Element::VkInitializers::attachmentDescription(m_swapChain->ImageFormat(), samples, isMSAAx1 ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
         VK_IMAGE_LAYOUT_UNDEFINED, 
@@ -135,7 +135,7 @@ void Element::RenderPass::begin(VkCommandBuffer vkCommandBuffer, int i)
     clearValues.emplace_back();
     clearValues[0].color = { m_clearColour.r, m_clearColour.g, m_clearColour.b, 1.0f };
 
-    if (GameSettings::Instance().depthEnabled)
+    if (GameSettings::get().depthEnabled)
     {
         clearValues.emplace_back();
         clearValues[1].depthStencil = { 1.0f, 0 };

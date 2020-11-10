@@ -1,9 +1,7 @@
 #pragma once
 
 #include "ElementConstants.h"
-
-
-#include <glm/glm.hpp>
+#include "element/Maths/Vec2.h"
 
 #include <string>
 #include <vector>
@@ -29,8 +27,8 @@ namespace Element {
 		virtual void setMode(WindowMode _mode) = 0;
 		virtual void setSize(int _width, int _height) = 0;
 		virtual void setTitle(const std::string& _title) = 0;
-		virtual glm::vec2 getSize() = 0;
-		virtual glm::vec2 getPosition() = 0;
+		virtual Vec2 getSize() = 0;
+		virtual Vec2 getPosition() = 0;
 		virtual bool tooSmall() = 0;
 		virtual int shouldClose() = 0;
 		virtual void pollEvents() = 0;

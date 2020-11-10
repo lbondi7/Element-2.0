@@ -12,15 +12,15 @@ namespace Element {
 		~ShaderManager();
 
 
-		Shader* GetShader(Shader::ShaderType type, std::string name);
+		Shader* GetShader(ShaderType type, std::string name);
 
 		void Destroy();
 
 	private:
 
-		std::string GetFileExtension(Shader::ShaderType type);
+		std::string GetFileExtension(ShaderType type);
 
-		Shader* CheckShaderCache(std::map<std::string, std::unique_ptr<Shader>>& shaders, Shader::ShaderType type, std::string& name);
+		Shader* CheckShaderCache(std::map<std::string, std::unique_ptr<Shader>>& shaders, ShaderType type, std::string& name);
 
 		std::map<std::string, std::unique_ptr<Shader>> m_vertexShaders;
 		std::map<std::string, std::unique_ptr<Shader>> m_fragmentShaders;

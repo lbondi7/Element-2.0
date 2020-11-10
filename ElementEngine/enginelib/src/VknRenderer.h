@@ -4,21 +4,16 @@
 
 #include "VknModel.h"
 #include "VknSprite.h"
-#include "VkFunctions.h"
 #include "VknSwapChain.h"
 #include "VknRenderPass.h"
 #include "CommandPool.h"
-#include "Resources.h"
-#include "Image.h"
-#include "Buffer.h"
-#include "Device.h"
 #include "ValidationLayers.h"
 #include "CommandBuffer.h"
-#include "ShaderManager.h"
 #include "VknInstance.h"
 #include "VknWindow.h"
 #include "PipelineManager.h"
 #include "DebugRenderer.h"
+#include "EleCamera.h"
 
 namespace Element {
 
@@ -83,11 +78,11 @@ namespace Element {
 
 		Camera* createCamera(Element::CameraType type) override;
 
-		void loadTexture(const std::string& texture) override;
+		void setClearColour(const Vec3& clearCol) override;
 
-		void setClearColour(const glm::vec3& clearCol) override;
+		void setClearColourNormalised(const Vec3& clearCol) override;
 
-		void setClearColourNormalised(const glm::vec3& clearCol) override;
+        void setCamera(Element::Camera *_camera) override;
 
 	private:
 		const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -99,7 +94,6 @@ namespace Element {
 		std::unique_ptr<SwapChain> swapChain;
 		std::unique_ptr<RenderPass> renderPass;
 		std::unique_ptr<PipelineManager> m_pipelineManager;
-		std::unique_ptr<ShaderManager> m_shaderManager;
 		std::unique_ptr<CommandPool> graphicsCommandPool;
 
 		std::vector<std::unique_ptr<CommandBuffer>> commandBuffers;
@@ -110,12 +104,12 @@ namespace Element {
 		std::vector<VkFence> imagesInFlight;
 		uint32_t currentFrame = 0;
 
-		std::map<std::string, std::unique_ptr<Mesh>> meshes;
-		std::map<std::string, std::unique_ptr<Texture>> texs;
 		std::vector<std::unique_ptr<VknSprite>> vknSprites;
 		std::vector<std::unique_ptr<VknModel>> vknModels;
 		bool rebuildCmdBuffers = false;
 
 		std::unique_ptr<DebugRenderer> debugRenderer;
-	};
+
+		EleCamera* camera;
+    };
 }

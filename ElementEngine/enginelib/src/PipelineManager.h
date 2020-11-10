@@ -14,7 +14,7 @@ namespace Element {
 	class PipelineManager
 	{
 	public:
-		PipelineManager(SwapChain* _swapChain, RenderPass* _renderPass, const PipelineData* pipelineData);
+		PipelineManager(SwapChain* _swapChain, RenderPass* _renderPass);
 		~PipelineManager();
 
 		void destroy();
@@ -27,7 +27,7 @@ namespace Element {
 
 		VknPipeline* getPipeline(std::string name);
 
-		void generatePipeline(std::string name, const PipelineData* pipelineData);
+		void generatePipeline(std::string name, const PipelineData& pipelineData);
 
 		VknPipeline* getDefaultPipeline();
 

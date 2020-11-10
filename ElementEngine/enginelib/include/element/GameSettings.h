@@ -3,6 +3,7 @@
 #include "ElementConstants.h"
 
 #include <string>
+
 namespace Element {
 
 	class GameSettings
@@ -24,7 +25,7 @@ namespace Element {
 			MSAA_64 = 6,
 		};
 
-		static GameSettings& Instance(){
+		static GameSettings& get(){
 			static GameSettings gameSettings;
 			return gameSettings;
 		}

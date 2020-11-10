@@ -4,7 +4,7 @@
 
 Element::VknWindow::VknWindow()
 {
-    const auto& settings = GameSettings::Instance();
+    const auto& settings = GameSettings::get();
     this->width = windowedWidth = settings.windowWidth;
     this->height = windowedHeight = settings.windowHeight;
     this->refreshRate = settings.fpsLimit;
@@ -69,16 +69,16 @@ GLFWwindow* Element::VknWindow::GetGLFWWindow()
     return glfwWindow;
 }
 
-glm::vec2 Element::VknWindow::getSize()
+Vec2 Element::VknWindow::getSize()
 {
     glfwGetWindowSize(glfwWindow, &width, &height);
-    return glm::vec2(width, height);
+    return Vec2(static_cast<float>(width), static_cast<float>(height));
 }
 
-glm::vec2 Element::VknWindow::getPosition()
+Vec2 Element::VknWindow::getPosition()
 {
     glfwGetWindowPos(glfwWindow, &xpos, &ypos);
-    return glm::vec2(xpos, ypos);
+    return Vec2(static_cast<float>(xpos), static_cast<float>(ypos));
 }
 
 void Element::VknWindow::setTitle(const std::string& _title)

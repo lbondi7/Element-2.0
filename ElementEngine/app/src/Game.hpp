@@ -1,20 +1,20 @@
 #ifndef VULKANTEST_GAME_H
 #define VULKANTEST_GAME_H
 
-#include <element/Framework.h>
+#include <element/Engine.h>
 
 #include <element/Sprite.h>
 #include "Object.hpp"
 #include <vector>
 
-class Game : public Element::Framework
+class Game : public Element::Engine
 {
 public:
 	Game();
 	~Game();
 
 	void init() override;
-	void update(Element::Time& epoch) override ;
+	void update(Element::Time& epoch) override;
 	void render() override;
 
 private:

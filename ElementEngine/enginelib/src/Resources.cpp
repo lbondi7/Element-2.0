@@ -1,5 +1,7 @@
 #include "Resources.h"
 
+#include "Utilities.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
@@ -32,7 +34,7 @@ void Element::Resources::LoadTextureData(const char* file, TextureData& textureD
     }
 }
 
-void Element::Resources::LoadMeshData(const char* file, MeshData& meshData)
+void LoadMeshData(const char* file, Element::MeshData& meshData)
 {
     std::string filename = "resources/models/";
     filename += file;
@@ -82,10 +84,10 @@ void Element::Resources::LoadTextureData(const std::string& file, TextureData& t
     LoadTextureData(file.c_str(), textureData);
 }
 
-void Element::Resources::LoadMeshData(const std::string& file, MeshData& meshData)
-{
-    LoadMeshData(file.c_str(), meshData);
-}
+//void Element::Resources::LoadMeshData(const std::string& file, MeshData& meshData)
+//{
+//    LoadMeshData(file.c_str(), meshData);
+//}
 
 void Element::Resources::LoadMaterialData(const char *file, MaterialData& materialData) {
 
@@ -100,12 +102,152 @@ void Element::Resources::LoadMaterialData(const char *file, MaterialData& materi
     if(is.is_open())
         tinyobj::LoadMtl(&material_map, &materials, &is, &warn, &err);
 
-    materialData.ambient = glm::vec3(materials[0].ambient[0], materials[0].ambient[1], materials[0].ambient[2]);
-    materialData.diffuse = glm::vec3(materials[0].diffuse[0], materials[0].diffuse[1], materials[0].diffuse[2]);
-    materialData.specular = glm::vec3(materials[0].specular[0], materials[0].specular[1], materials[0].specular[2]);
+    materialData.ambient = Vec3(materials[0].ambient[0], materials[0].ambient[1], materials[0].ambient[2]);
+    materialData.diffuse = Vec3(materials[0].diffuse[0], materials[0].diffuse[1], materials[0].diffuse[2]);
+    materialData.specular = Vec3(materials[0].specular[0], materials[0].specular[1], materials[0].specular[2]);
 
 //    tinyobj::MaterialFileReader matFileReader(filename);
 //    matFileReader.operator()("plane.mtl", &materials, &material_map, &warn, &err);
 
 
 }
+
+Element::Mesh *Element::Resources::mesh(const std::string &name, State state) {
+
+    auto tmp_name = (state == State::STATIC ? "s_" : "d_") + Utilities::extractName(name);
+
+
+    for (auto& m : static_meshes)
+    {
+        if(tmp_name == m.first)
+            return &m.second;
+    }
+    for (auto& m : dynamic_meshes)
+    {
+        if(tmp_name == m.first)
+            return &m.second;
+    }
+
+    auto& mesh = state == State::STATIC ? static_meshes[tmp_name] : dynamic_meshes[tmp_name];
+
+    MeshData data;
+    LoadMeshData(name.c_str(), data);
+    mesh.vertices = data.vertices;
+    mesh.indices = data.indices;
+    mesh.Load();
+    return &mesh;
+}
+
+Element::Texture *Element::Resources::texture(const std::string &name, State state) {
+
+    auto tmp_name = (state == State::STATIC ? "s_" : "d_") + Utilities::extractName(name);
+
+    auto &texture = state == State::STATIC ? static_textures[tmp_name] : dynamic_textures[tmp_name];
+    if (texture)
+        return texture.get();
+
+    texture = std::make_unique<Texture>();
+    LoadTextureData(name, texture->data);
+    texture->Load();
+    return texture.get();
+}
+
+Element::Shader *Element::Resources::shader(const std::string &name, Element::ShaderType type) {
+
+    switch (type) {
+        case ShaderType::VERTEX: {
+                return getShader(name, type, vertex_shaders);
+            //            auto &shader = vertex_shaders[name];
+//            if (shader)
+//                return shader.get();
+//
+//            shader = std::make_unique<Shader>();
+//            shader->Load(type, name);
+//            return shader.get();
+        }
+        case ShaderType::FRAGMENT: {
+            return getShader(name, type, fragment_shaders);
+//            auto &shader = fragment_shaders[name];
+//            if (shader)
+//                return shader.get();
+//
+//            shader = std::make_unique<Shader>();
+//            shader->Load(type, name);
+//            return shader.get();
+        }
+        case ShaderType::GEOMETRY: {
+            return getShader(name, type, geometry_shaders);
+//            auto &shader = geometry_shaders[name];
+//            if (shader)
+//                return shader.get();
+//
+//            shader = std::make_unique<Shader>();
+//            shader->Load(type, name);
+//            return shader.get();
+        }
+    }
+
+    return nullptr;
+}
+
+void Element::Resources::unbindMeshes() {
+
+    for (auto& mesh: static_meshes)
+        mesh.second.bound = false;
+
+    for (auto& mesh: dynamic_meshes)
+        mesh.second.bound = false;
+
+}
+
+void Element::Resources::init() {
+    std::string meshNames[3]{ "cube.obj", "quad.obj", "error.obj" };
+    for (const auto& name : meshNames)
+        mesh(name);
+
+    std::string texts[2]{ "default.jpg", "texture.jpg" };
+    for (const auto& name : texts)
+        texture(name);
+}
+
+void Element::Resources::deInit() {
+
+    for (auto& mesh: static_meshes)
+        mesh.second.destroy();
+
+    for (auto& mesh: dynamic_meshes)
+        mesh.second.destroy();
+
+    for (auto& texture: static_textures)
+        texture.second->destroy();
+
+    for (auto& texture: dynamic_textures)
+        texture.second->destroy();
+
+    for (auto& shader: vertex_shaders)
+        shader.second->destroy();
+
+    for (auto& shader: fragment_shaders)
+        shader.second->destroy();
+
+    for (auto& shader: geometry_shaders)
+        shader.second->destroy();
+
+}
+
+Element::Shader *Element::Resources::getShader(const std::string& name, Element::ShaderType type, std::map<std::string,
+                                               std::unique_ptr<Element::Shader>> &shader_map) {
+
+    auto &shader = shader_map[name];
+    if (shader)
+        return shader.get();
+
+    shader = std::make_unique<Shader>();
+    shader->Load(type, name);
+    return shader.get();
+}
+
+Element::Resources::~Resources() {
+
+}
+

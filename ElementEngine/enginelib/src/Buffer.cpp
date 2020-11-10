@@ -44,10 +44,10 @@ void Element::Buffer::Create(VkDeviceSize size, VkDeviceSize offset, VkBufferUsa
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = Element::VkFunctions::GetMemoryType(physicalDevice.m_memoryProperties, memRequirements.memoryTypeBits, properties);
 
-    Debugger::Get().log("Memory Type Bits", static_cast<int>(memRequirements.memoryTypeBits), Colour::MAGENTA);
-    Debugger::Get().log("Memory Alignment", static_cast<int>(memRequirements.alignment), Colour::MAGENTA);
-    Debugger::Get().log("Memory Size", static_cast<int>(memRequirements.size), Colour::MAGENTA);
-    Debugger::Get().log("Memory Allocation Type index", static_cast<int>(allocInfo.memoryTypeIndex), Colour::MAGENTA);
+    Debugger::get().log("Memory Type Bits", static_cast<int>(memRequirements.memoryTypeBits), Colour::MAGENTA);
+    Debugger::get().log("Memory Alignment", static_cast<int>(memRequirements.alignment), Colour::MAGENTA);
+    Debugger::get().log("Memory Size", static_cast<int>(memRequirements.size), Colour::MAGENTA);
+    Debugger::get().log("Memory Allocation Type index", static_cast<int>(allocInfo.memoryTypeIndex), Colour::MAGENTA);
 
     if (vkAllocateMemory(logicalDevice, &allocInfo, nullptr, &m_memory) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate buffer memory!");

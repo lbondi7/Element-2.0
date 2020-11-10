@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
 #include "VkInitializers.h"
@@ -76,6 +77,13 @@ struct Vertex {
 
     bool operator==(const Vertex& other) const {
         return pos == other.pos && color == other.color && texCoord == other.texCoord;
+    }
+
+    Vertex& operator=(const Vertex& other){
+        this->pos = other.pos;
+        this->color = other.color;
+        this->texCoord = other.texCoord;
+        return *this;
     }
 
     static VkVertexInputBindingDescription getBindingDescription() {

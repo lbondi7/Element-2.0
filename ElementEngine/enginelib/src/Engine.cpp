@@ -1,17 +1,17 @@
 #include <element/Engine.h>
 
+#include "VknRenderer.h"
 #include "VknConstants.h"
+#include "ImGUI_.h"
+
 #include <element/Debugger.h>
 #include <element/Inputs.h>
-#include "ImGUI_.h"
 
 void Element::Engine::run()
 {
     Time epoch;
     start();
     init();
-    
-    Inputs::Get().init(m_renderer->getWindow()->GetGLFWWindow());
 
     epoch.updateDeltaTime();
 
@@ -39,7 +39,29 @@ void Element::Engine::run()
             renderFrame();
             endFrame();
         }
-        Inputs::Get().clear();
+        Inputs::get().clear();
     }
 }
+
+void Element::Engine::renderFrame()
+{
+    m_renderer->renderFrame();
+}
+
+void Element::Engine::beginFrame()
+{
+    m_renderer->beginFrame();
+}
+
+void Element::Engine::endFrame()
+{
+    m_renderer->endFrame();
+}
+
+void Element::Engine::start()
+{
+    m_renderer = std::make_unique<VknRenderer>();
+    m_renderer->init();
+}
+
 

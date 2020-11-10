@@ -1,14 +1,12 @@
 #include "VknSprite.h"
 
-#include "DefaultResources.h"
+#include "Utilities.h"
+#include "Resources.h"
+#include "Locator.h"
+
 #include <element/IdHandler.h>
 
 #include <glm/gtc/matrix_transform.hpp>
-
-Element::VknSprite::VknSprite()
-{
-
-}
 
 Element::VknSprite::VknSprite(VknPipeline* pipeline, Mesh* mesh, uint32_t imageCount)
 {
@@ -55,7 +53,8 @@ void Element::VknSprite::SetTexture(Texture* texture, bool keepSize)
 	m_texture = texture;
 
 	if(!keepSize)
-		transform.setSize(glm::vec2(texture->data.width, texture->data.height));
+		transform.setSize(Vec2(static_cast<float>(texture->data.width),
+                               static_cast<float>(texture->data.height)));
 
 	descriptorSet->update(uniformBuffers, m_texture);
 	if(dirty == DirtyFlags::CLEAN)
@@ -93,7 +92,7 @@ void Element::VknSprite::updateUniformBuffers(bool cameraChanged, const glm::mat
 	UniformBufferObject ubo{};
 	const auto& scalar = glm::vec3(transform.getSize().x * transform.getScale().x,
 		transform.getSize().y * transform.getScale().y, 1.0f);
-	glm::vec3 pos = transform.getPosition();
+	auto pos = Utilities::vec3RefToGlmvec3(transform.getPosition());
 	pos.y *= -1;
 	ubo.model = glm::translate(ubo.model, pos + scalar);
 	ubo.model = glm::scale(ubo.model, scalar);
@@ -139,7 +138,7 @@ void Element::VknSprite::destroy()
 
 	for (auto& buffer : uniformBuffers)
 	{
-		buffer.Destroy();
+        buffer.Destroy();
 	}
 }
 
@@ -157,7 +156,7 @@ void Element::VknSprite::init(VknPipeline* pipeline, Mesh* mesh, uint32_t imageC
 	m_mesh = mesh;
 	descriptorSet = std::make_unique<DescriptorSet>();
 	descriptorSet->init(m_pipeline, imageCount);
-	SetTexture(DefaultResources::GetTexture(), false);
+	SetTexture(Locator::getResource()->texture("default"), false);
 	//descriptorSet->update(uniformBuffers, m_texture);
 	id = IdHandler::GetID();
 }

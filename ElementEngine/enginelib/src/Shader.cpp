@@ -3,7 +3,7 @@
 #include "VkInitializers.h"
 #include "VkFunctions.h"
 #include "Device.h"
-#include <element/Utilities.h>
+#include "Utilities.h"
 
 #include <stdexcept>
 #include <algorithm>
@@ -15,7 +15,7 @@ Element::Shader::Shader(ShaderType type, std::string file) : m_shaderType(type)
 
 Element::Shader::~Shader()
 {
-    Destroy();
+    //destroy();
 }
 
 void Element::Shader::Load(ShaderType type, std::string file)
@@ -30,7 +30,7 @@ void Element::Shader::Load(ShaderType type, std::string file)
     }
 }
 
-void Element::Shader::Destroy() {
+void Element::Shader::destroy() {
 
     if (m_module)
     {
@@ -43,17 +43,17 @@ void Element::Shader::SetShaderType(ShaderType type)
     m_shaderType = type;
 }
 
-Element::Shader::ShaderType Element::Shader::GetShaderType()
+Element::ShaderType Element::Shader::GetShaderType() const
 {
     return m_shaderType;
 }
 
-VkShaderModule Element::Shader::GetVkShaderModule()
+VkShaderModule Element::Shader::GetVkShaderModule() const
 {
     return m_module;
 }
 
-VkShaderStageFlagBits Element::Shader::GetVkShaderStageFlag()
+VkShaderStageFlagBits Element::Shader::GetVkShaderStageFlag() const
 {
     switch (m_shaderType) {
 
@@ -99,13 +99,13 @@ std::string Element::Shader::GetFileExtension()
     std::string extension = "";
     switch (m_shaderType)
     {
-    case Element::Shader::ShaderType::VERTEX:
+    case Element::ShaderType::VERTEX:
         extension += ".vert";
         break;
-    case Element::Shader::ShaderType::FRAGMENT:
+    case Element::ShaderType::FRAGMENT:
         extension += ".frag";
         break;
-    case Element::Shader::ShaderType::GEOMETRY:
+    case Element::ShaderType::GEOMETRY:
         extension += ".geom";
         break;
     }

@@ -8,14 +8,14 @@
 Game::Game()
 {
 	using namespace Element;
-	GameSettings::Instance().windowWidth = 900;
-	GameSettings::Instance().windowHeight = 600;
-	GameSettings::Instance().windowTitle = "Epic Element Engine";
-	GameSettings::Instance().gameDimension = GameSettings::Dimension::_3D;
-	GameSettings::Instance().windowMode = WindowMode::WINDOWED;
-	GameSettings::Instance().fpsLimit = 60;
-	GameSettings::Instance().msaaLevel = GameSettings::Multisample::MSAA_1;
-	GameSettings::Instance().depthEnabled = true;
+    GameSettings::get().windowWidth = 900;
+    GameSettings::get().windowHeight = 600;
+    GameSettings::get().windowTitle = "Epic Element Engine";
+    GameSettings::get().gameDimension = GameSettings::Dimension::_3D;
+    GameSettings::get().windowMode = WindowMode::WINDOWED;
+    GameSettings::get().fpsLimit = 60;
+    GameSettings::get().msaaLevel = GameSettings::Multisample::MSAA_1;
+    GameSettings::get().depthEnabled = true;
 } 
 
 Game::~Game()
@@ -25,15 +25,16 @@ Game::~Game()
 
 void Game::init()
 {
-	glm::vec3 pos(0, 0, 0);
+	Vec3 pos(0, 0, 5);
 	objects.resize(1);
 	for (auto& object : objects)
 	{
 		object.model = m_renderer->createModel();
 		object.model->SetMesh(m_renderer->getMesh("cube"));
-		object.model->GetTransform().setPosition(pos); 
-		//object.model->GetTransform().setScale();
-		pos += glm::vec3(2, 2, 2); 
+		object.model->GetTransform().setPosition(pos);
+        object.model->GetTransform().setScale(6);
+        //object.model->GetTransform().setScale();
+		pos += Vec3(2, 2, 2);
 	} 
 	 
 	camera = m_renderer->createCamera(Element::CameraType::ORTHOGRAPHIC);
@@ -63,13 +64,22 @@ void Game::update(Element::Time& epoch)
 
 	float zoomSpeed = 100.0f;
 
-	if (!Element::Inputs::Get().keyDown(Element::KEYS::KEY_KP_1))
+	if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_1))
 		camera->SetZoom(camera->GetZoom() + zoomSpeed * dt_sec);
-	if (!Element::Inputs::Get().keyDown(Element::KEYS::KEY_KP_3))
+	if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_3))
 		camera->SetZoom(camera->GetZoom() - zoomSpeed * dt_sec);
 
+    if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_5))
+        camera->setPosZ( camera->getPosZ() - zoomSpeed * dt_sec);
 
-	if (Element::Inputs::Get().keyDown(Element::KEYS::KEY_ESCAPE))
+    if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_4))
+        camera->setPosX( camera->getPosX() - zoomSpeed * dt_sec);
+
+    if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_6))
+        camera->setPosX( camera->getPosX() + zoomSpeed * dt_sec);
+
+
+	if (Element::Inputs::get().keyDown(Element::KEYS::KEY_ESCAPE))
 	{
 		m_renderer->signalExit();
 	}
@@ -97,7 +107,7 @@ void Game::render()
 		m_renderer->renderModel(object.model);
 	}
 	//if(Help)
-	//	m_renderer->renderSprite(sprite);
+		m_renderer->renderSprite(sprite);
 
 
 

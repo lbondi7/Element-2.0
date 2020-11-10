@@ -47,9 +47,9 @@
 //
 //}
 
-void Element::Texture::Load(std::string file, VkImageLayout imageLayout)
+void Element::Texture::Load(VkImageLayout imageLayout)
 {
-	Element::Resources::LoadTextureData(file, data);
+	//Element::Resources::LoadTextureData(file, data);
 	//Element::TextureData texture = Element::Resources::LoadTextureData("texture.jpg");
 
 	VkDeviceSize imageSize = data.width * data.height * 4;

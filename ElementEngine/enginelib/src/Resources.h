@@ -1,63 +1,63 @@
 #pragma once
 
 #include "VknConstants.h"
+#include "Shader.h"
+#include "Mesh.h"
+#include "Texture.h"
+#include "Material.h"
+
 #include <string>
+#include <map>
+#include <memory>
 
 namespace Element {
 
-	struct TextureData {
-		void* data;
-		int width;
-		int height;
-		int channels;
+	class Resources {
+    public:
+        enum class State : int{
+            STATIC = 0,
+            DYNAMIC= 1
+        };
 
-		TextureData& operator=(const TextureData& other) {
-			//data = new void*();
-			data = new void*(other.data);
-            //memcpy(data, src_data, static_cast<size_t>(m_size));
-			height = other.height;
-			width = other.width;
-			channels = other.channels;
-			return *this;
-		}
+        Resources() = default;
+        ~Resources();
 
-	};
+        Element::Mesh* mesh(const std::string& name, State state = State::STATIC);
 
-	struct MeshData {
-		std::vector<Vertex> vertices;
-		std::vector<uint32_t> indices;
+        Element::Texture *texture(const std::string &name, State state = State::STATIC);
 
-		MeshData& operator=(const MeshData& other) {
-			vertices = other.vertices;
-			indices = other.indices;
-			return *this;
-		}
+        Element::Shader *shader(const std::string &name, ShaderType type);
 
-	};
+        void unbindMeshes();
 
-	struct MaterialData{
-	    glm::vec3 ambient;
-	    glm::vec3 diffuse;
-	    glm::vec3 specular;
-	};
+        void init();
+
+        void deInit();
 
 
-	namespace Resources {
-    //public:
-//        static Resources& Get(){
-//            static Resources resources;
-//            return resources;
-//        }
+	private:
+
+        std::map<std::string, std::unique_ptr<Shader>> vertex_shaders;
+        std::map<std::string, std::unique_ptr<Shader>> fragment_shaders;
+        std::map<std::string, std::unique_ptr<Shader>> geometry_shaders;
+
+        std::map<std::string, Mesh> static_meshes;
+        //std::map<std::string, Mesh*> static_meshes;
+        std::map<std::string, Mesh> dynamic_meshes;
+
+        std::map<std::string, std::unique_ptr<Texture>> static_textures;
+        std::map<std::string, std::unique_ptr<Texture>> dynamic_textures;
+
+
         void LoadTextureData(const std::string& file, TextureData& textureData);
         void LoadTextureData(const char* file, TextureData& textureData);
-		void LoadMeshData(const std::string& file, MeshData& meshData);
-		void LoadMeshData(const char* file, MeshData& meshData);
+//        void LoadMeshData(const std::string& file, MeshData& meshData);
+//        void LoadMeshData(const char* file, MeshData& meshData);
 
         void LoadMaterialData(const char* file, MaterialData& materialData);
 
-//	private:
-//        Resources() = default;
-//        ~Resources() = default;
+        Shader* getShader(const std::string& name, Element::ShaderType type,
+                          std::map<std::string, std::unique_ptr<Shader>>& shader_map);
 
 	};
 }

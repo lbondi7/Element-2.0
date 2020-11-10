@@ -19,3 +19,12 @@ uint32_t Element::Sprite::getId() const
 {
 	return id;
 }
+
+Element::Sprite::Sprite(Element::VknPipeline *pipeline, Element::Mesh *mesh, uint32_t imageCount) : m_pipeline
+(pipeline), m_mesh(mesh){
+
+}
+
+Element::Sprite::Sprite() {
+
+}

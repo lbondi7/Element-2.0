@@ -83,7 +83,7 @@ void Element::Time::updateFPS()
 		fps = static_cast<int>(static_cast<double>(frameCount) / elapsed);
 		frameCount = 0;
 		lastFPSCount = getGameTime();
-		Debugger::Get().log("FPS", fps, Colour::BRIGHT_CYAN);
+        Debugger::get().log("FPS", fps, Colour::BRIGHT_CYAN);
 	}
 }
 

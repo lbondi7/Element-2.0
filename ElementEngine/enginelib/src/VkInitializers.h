@@ -33,6 +33,8 @@ namespace Element {
 		VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo(const std::vector<VkDynamicState>& pDynamicStates, VkPipelineDynamicStateCreateFlags flags = VK_CULL_MODE_NONE);
 
 		///Desciptor Create Info///
+        VkDescriptorPoolCreateInfo descriptorPoolCreateInfo(const VkDescriptorPoolSize* descriptorPoolSizeData, uint32_t
+        poolSizeCount, uint32_t maxSets);
 		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo(const VkDescriptorSetLayoutBinding* bindings, uint32_t count);
 		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(VkShaderStageFlags shaderStage, VkDescriptorType descriptorType, uint32_t binding, uint32_t count = 1, const VkSampler* immutableSampler = nullptr);
 		VkWriteDescriptorSet writeDesciptorSet(VkDescriptorSet descriptorSet, VkDescriptorType descriptorType, const VkDescriptorBufferInfo* bufferInfo, uint32_t binding, uint32_t count = 1);

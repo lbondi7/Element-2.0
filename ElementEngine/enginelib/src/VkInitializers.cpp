@@ -256,3 +256,14 @@ VkDescriptorPoolSize Element::VkInitializers::descriptorPoolSizeCreateInfo(VkDes
     poolSize.descriptorCount = descriptorCount;
     return poolSize;
 }
+
+VkDescriptorPoolCreateInfo
+Element::VkInitializers::descriptorPoolCreateInfo(const VkDescriptorPoolSize *descriptorPoolSizeData,
+                                                  uint32_t poolSizeCount, uint32_t maxSets) {
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.pPoolSizes = descriptorPoolSizeData;
+    poolInfo.poolSizeCount = poolSizeCount;
+    poolInfo.maxSets = maxSets;
+    return poolInfo;
+}

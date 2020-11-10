@@ -1,4 +1,8 @@
 #include "VknModel.h"
+#include "Utilities.h"
+#include "Resources.h"
+#include "Locator.h"
+#include "VknResources.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -82,8 +86,8 @@ void Element::VknModel::SetPipeline(VknPipeline* _pipeline)
 		return;
 
 	pipeline = _pipeline;
-	descriptorSet->flush();
-	descriptorSet->init(pipeline, descriptorSet->getCount());
+	//descriptorSet->flush();
+	//descriptorSet->init(pipeline, descriptorSet->getCount());
 	dirty = DirtyFlags::PIPELINE_DIRTY;
 }
 
@@ -119,11 +123,11 @@ void Element::VknModel::updateUniformBuffers(bool cameraChanged, const glm::mat4
 		return;
 
 	UniformBufferObject ubo{};
-	glm::vec3 pos = transform.getPosition();
+	auto pos = Utilities::vec3RefToGlmvec3(transform.getPosition());
 	pos.y *= -1;
 	ubo.model = glm::translate(ubo.model, pos);
 	ubo.model *= glm::yawPitchRoll(transform.getRotation().y, transform.getRotation().x, transform.getRotation().z);
-	ubo.model = glm::scale(ubo.model, transform.getScale());
+	ubo.model = glm::scale(ubo.model, Utilities::vec3RefToGlmvec3(transform.getScale()));
 	ubo.view = viewMatrix;
 	ubo.proj = projMatrix;
 
@@ -165,7 +169,7 @@ void Element::VknModel::destroy()
 
 	for (auto& buffer : uniformBuffers)
 	{
-		buffer.Destroy();
+        buffer.Destroy();
 	}
 }
 
@@ -181,17 +185,40 @@ void Element::VknModel::init(VknPipeline* _pipeline, uint32_t imageCount)
 		buffer.Create(bufferSize, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 		buffer.Map();
 	}
-	descriptorSet = std::make_unique<DescriptorSet>();
+	//descriptorSet = std::make_unique<DescriptorSet>();
+	descriptorSet = VknResources::get().allocateDescriptorSet();
 	descriptorSet->init(pipeline, imageCount);
-	SetTexture(DefaultResources::GetTexture());
+	SetTexture(Locator::getResource()->texture("default"));
 }
 
 void Element::VknModel::reInit(uint32_t imageCount)
 {
 	entityState = EntityState::NOT_RENDERED;
 	prevEntityState = EntityState::NOT_RENDERED;
-	descriptorSet = std::make_unique<DescriptorSet>();
+	//descriptorSet = std::make_unique<DescriptorSet>();
 	descriptorSet->init(pipeline, imageCount);
 	descriptorSet->update(uniformBuffers, texture);
 	dirty = DirtyFlags::DIRTY;
+}
+
+Element::VknModel::VknModel(Element::VknPipeline *pipeline, uint32_t imageCount, std::vector<Buffer> &cameraBuffers) {
+
+    init(pipeline, imageCount, cameraBuffers);
+}
+
+void Element::VknModel::init(VknPipeline* _pipeline, uint32_t imageCount, std::vector<Buffer> &cameraBuffers)
+{
+    entityState = EntityState::NOT_RENDERED;
+    prevEntityState = EntityState::NOT_RENDERED;
+    pipeline = _pipeline;
+    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+    uniformBuffers.resize(imageCount);
+    for (auto& buffer : uniformBuffers)
+    {
+        buffer.Create(bufferSize, 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        buffer.Map();
+    }
+
+    descriptorSet->init(pipeline, imageCount);
+    SetTexture(Locator::getResource()->texture("default"));
 }

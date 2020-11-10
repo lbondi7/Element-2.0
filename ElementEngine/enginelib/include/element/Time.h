@@ -1,7 +1,6 @@
 #pragma once
 
 #include <chrono>
-#include <cctype>
 
 namespace Element {
 	class Time

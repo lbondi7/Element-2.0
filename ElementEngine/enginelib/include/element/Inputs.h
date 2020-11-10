@@ -1,8 +1,7 @@
 #pragma once
 
 #include "InputIndices.h"
-
-#include <glm/glm.hpp>
+#include "element/Maths/Vec2.h"
 
 #include <deque>
 #include <vector>
@@ -44,14 +43,14 @@ namespace Element {
 		~Inputs() = default;
 
 
-		static Inputs& Get() {
+		static Inputs& get() {
 			static Inputs input;
 			return input;
 		}
 
 		float getCursorPos(int axis);
 
-		glm::vec2 getCursorPos();
+		Vec2 getCursorPos();
 
 		bool keyDown(int key, int mod = -1);
 
@@ -91,7 +90,5 @@ namespace Element {
 
 		using InputFncs = std::vector<std::function<void(std::shared_ptr<InputEvent>)>>;
 		InputFncs callback_funcs;
-
-		bool heldButtons[10]{ false, false, false, false, false, false, false, false, false, false, };
 	};
 }

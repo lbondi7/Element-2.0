@@ -10,7 +10,6 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Debugger.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/ElementConstants.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Engine.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Framework.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/GameSettings.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/IdHandler.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/InputIndices.h
@@ -19,8 +18,11 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Renderer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Sprite.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Time.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Utilities.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Window.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Transform.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Transform2D.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Maths/Vec3.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Maths/Vec2.h
     
     #main engine files
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Buffer.cpp
@@ -34,15 +36,12 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DebugRenderer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DebugWindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Debugger.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/DefaultResources.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/DefaultResources.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/DescriptorInfo.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ShaderInfo.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DescriptorSet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/DescriptorSet.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Device.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Device.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Engine.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Framework.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IdHandler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ImGUI_.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ImGUI_.h
@@ -73,6 +72,7 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Time.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Utilities.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Utilities.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ValidationLayers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ValidationLayers.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VkFunctions.cpp
@@ -98,7 +98,19 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VknSwapChain.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VknWindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VknWindow.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Window.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Window.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Transform.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Vec3.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Vec2.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/EleCamera.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/EleCamera.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Transform2D.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/VknDescriptorPool.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/VknDescriptorPool.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/VknResources.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/VknResources.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.h src/Locator.cpp src/Locator.h)
 
 target_include_directories(
     ${PROJECT_NAME} SYSTEM PUBLIC
@@ -117,8 +129,8 @@ add_subdirectory(libs/imgui)
 
 find_package(Vulkan REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan)
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 target_link_libraries(${PROJECT_NAME} PUBLIC glm)
-target_link_libraries(${PROJECT_NAME} PRIVATE stb)
-target_link_libraries(${PROJECT_NAME} PRIVATE tinyobjloader)
-target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
+target_link_libraries(${PROJECT_NAME} PUBLIC stb)
+target_link_libraries(${PROJECT_NAME} PUBLIC tinyobjloader)
+target_link_libraries(${PROJECT_NAME} PUBLIC imgui)

@@ -3,11 +3,6 @@
 #include "Camera.h"
 #include "Window.h"
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-
-#include <string>
 #include <memory>
 
 namespace Element {
@@ -49,19 +44,17 @@ namespace Element {
 
 		virtual void endFrame() = 0;
 
-		virtual void setClearColour(const glm::vec3& clearCol) = 0;
+		virtual void setClearColour(const Vec3& clearCol) = 0;
 
-		virtual void setClearColourNormalised(const glm::vec3& clearCol) = 0;
+		virtual void setClearColourNormalised(const Vec3& clearCol) = 0;
 
-		void setCamera(Camera* _camera);
+		virtual void setCamera(Element::Camera* _camera) = 0;
 
 		virtual Camera* createCamera(Element::CameraType type) = 0;
 
 		virtual Sprite* createNewSprite() = 0;
 
 		virtual void renderSprite(Sprite* sprite) = 0;
-
-		virtual void loadTexture(const std::string& texture) = 0;
 
 	protected:
 
@@ -76,8 +69,6 @@ namespace Element {
 
 		RenderStage renderStage = RenderStage::START;
 
-		glm::vec3 clearColour = {0.0f, 0.0f, 1.0f};
-
-		Camera* camera;
+		Vec3 clearColour = Vec3(0.0f, 0.0f, 1.0f);
 	};
 }

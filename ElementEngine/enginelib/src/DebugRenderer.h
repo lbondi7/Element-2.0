@@ -21,7 +21,7 @@ namespace Element {
 
 		void init(VkRenderPass renderPass);
 
-		void update();
+		void update(float windowWidth, float windowHeight);
 
 		void draw(VkCommandBuffer commandBuffer);
 
