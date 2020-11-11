@@ -62,7 +62,9 @@ void Element::Texture::Load(VkImageLayout imageLayout)
 	stagingBuffer.MapCopyMemory(data.data);
 	stbi_image_free(data.data);
 
-	m_image.Create(data.width, data.height, mipLevels, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	m_image.Create(data.width, data.height, mipLevels, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	m_image.transitionLayout(m_image.m_format, mipLevels,
 		VK_IMAGE_LAYOUT_UNDEFINED,

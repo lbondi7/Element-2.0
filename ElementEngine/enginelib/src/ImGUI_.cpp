@@ -36,6 +36,7 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	if (!started) return;
 
 	const auto& logicalDevice = Device::getVkDevice();
+    const auto& physicalDevice = Device::GetPhysicalDevice()->GetSelectedDevice();
 	ImGuiIO& io = ImGui::GetIO();
 
 	// Create font texture
@@ -44,7 +45,9 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
 	VkDeviceSize uploadSize = texWidth * texHeight * 4 * sizeof(char);
 
-	fImage.Create(texWidth, texHeight, 1, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	fImage.Create(texWidth, texHeight, 1, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+               VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	fontView = Element::VkFunctions::createImageView(logicalDevice, fImage.m_vkImage, 1, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 
@@ -72,7 +75,8 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-	samplerInfo.maxAnisotropy = 1.0f;
+    samplerInfo.anisotropyEnable = VK_TRUE;
+	samplerInfo.maxAnisotropy = 16.0f;
 	samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 
 	if (vkCreateSampler(logicalDevice, &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
@@ -148,7 +152,8 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	// Enable blending
 	VkPipelineColorBlendAttachmentState blendAttachmentState{};
 	blendAttachmentState.blendEnable = VK_TRUE;
-	blendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	blendAttachmentState.colorWriteMask =
+	        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 	blendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 	blendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 	blendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
@@ -156,12 +161,16 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	blendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 	blendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
 
-	VkPipelineColorBlendStateCreateInfo colorBlendState = Element::VkInitializers::pipelineColourBlendCreateInfo(&blendAttachmentState, 1, VK_FALSE, VK_LOGIC_OP_COPY);
+	VkPipelineColorBlendStateCreateInfo colorBlendState = Element::VkInitializers::pipelineColourBlendCreateInfo(
+	        &blendAttachmentState, 1, VK_FALSE, VK_LOGIC_OP_COPY);
 
-	VkPipelineDepthStencilStateCreateInfo depthStencilState = Element::VkInitializers::pipelineDepthStencilCreateInfo(VK_FALSE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL, VK_FALSE, VK_FALSE);
+	VkPipelineDepthStencilStateCreateInfo depthStencilState = Element::VkInitializers::pipelineDepthStencilCreateInfo(
+	        VK_FALSE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL, VK_FALSE, VK_FALSE);
 
-	VkPipelineViewportStateCreateInfo viewportState = Element::VkInitializers::pipelineViewportCreateInfo(nullptr, 1, nullptr, 1);
-	VkPipelineMultisampleStateCreateInfo multisampling = Element::VkInitializers::pipelineMultisamplerCreateInfo(VK_SAMPLE_COUNT_1_BIT, VK_FALSE);;
+	VkPipelineViewportStateCreateInfo viewportState =Element::VkInitializers::pipelineViewportCreateInfo(
+	        nullptr, 1, nullptr, 1);
+	VkPipelineMultisampleStateCreateInfo multisampling = Element::VkInitializers::pipelineMultisamplerCreateInfo
+	        (physicalDevice.msaaSamples, VK_FALSE);;
 	std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
 	VkPipelineDynamicStateCreateInfo dynamicState = Element::VkInitializers::dynamicStateCreateInfo(dynamicStateEnables);
 

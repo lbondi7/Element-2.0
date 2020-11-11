@@ -22,8 +22,14 @@ m_swapChain(swapChain), m_renderPass(renderPass), name(name), m_pipelineData(pip
                         shaderInfo.binding));
 
         auto shader = Locator::getResource()->shader(shaderInfo.shader, shaderInfo.shaderType);
-        shaderStages.emplace_back(Element::VkInitializers::pipelineShaderStageCreateInfo(shader->GetVkShaderModule(),
-                                                                                          shader->GetVkShaderStageFlag()));
+        bool loaded = false;
+        for (const auto& shaderStage : shaderStages) {
+                if(shader->GetVkShaderStageFlag() == shaderStage.stage)
+                    loaded = true;
+        }
+        if(!loaded)
+            shaderStages.emplace_back(Element::VkInitializers::pipelineShaderStageCreateInfo(
+                            shader->GetVkShaderModule(), shader->GetVkShaderStageFlag()));
     }
 
     init();
@@ -46,7 +52,10 @@ void Element::VknPipeline::init() {
 void Element::VknPipeline::destroy()
 {
     flush();
-
+    for (auto& pool : descriptorPools) {
+        pool->destroy();
+    }
+    descriptorPools.clear();
     auto logicalDevice = Device::getVkDevice();
     vkDestroyPipelineLayout(logicalDevice, m_pipelineLayout, nullptr);
     vkDestroyDescriptorSetLayout(logicalDevice, m_descriptorSetLayout, nullptr);
@@ -58,7 +67,6 @@ void Element::VknPipeline::reInitVknPipeline(SwapChain* swapChain, RenderPass* r
     m_swapChain = swapChain;
     m_renderPass = renderPass;
     createVknPipeline();
-    createDescriptorPool();
 }
 
 void Element::VknPipeline::flush() {
@@ -68,10 +76,9 @@ void Element::VknPipeline::flush() {
 
     flushed = true;
     auto logicalDevice = Device::getVkDevice();
-    for (auto& pool : m_descriptorPools) {
-        pool = nullptr;
+    for (auto& pool : descriptorPools) {
+        pool->flush();
     }
-    //vkDestroyDescriptorPool(logicalDevice, m_descriptorPool, nullptr);
     vkDestroyPipeline(logicalDevice, m_vkPipeline, nullptr);
     m_swapChain = nullptr;
     m_renderPass = nullptr;
@@ -107,8 +114,15 @@ void Element::VknPipeline::createDescriptorSetLayout() {
 
 void Element::VknPipeline::createDescriptorPool() {
 
-    m_descriptorPools.emplace_back(
-            Locator::getVknResource()->allocateDescriptorPool(m_pipelineData, m_swapChain->getImageCount()));
+    auto& pool = descriptorPools.emplace_back();
+    pool = std::make_unique<VknDescriptorPool>();
+    pool->init(m_pipelineData, m_swapChain->getImageCount());
+
+}
+
+void Element::VknPipeline::reCreateDescriptorPool() {
+
+    //Locator::getVknResource()->allocateDescriptorPool(m_pipelineData, m_swapChain->getImageCount());
 
 }
 
@@ -134,7 +148,7 @@ const std::string& Element::VknPipeline::getName()
 
 void Element::VknPipeline::createVknPipeline() {
 
-    auto logicalDevice = Device::getVkDevice();
+    const auto& logicalDevice = Device::getVkDevice();
     const auto& physicalDevice = Device::GetPhysicalDevice()->GetSelectedDevice();
 
     bool depthEnabled = m_pipelineData.depthEnabled;
@@ -196,20 +210,20 @@ VkPipelineLayout Element::VknPipeline::GetVkPipelineLayout()
     return m_pipelineLayout;
 }
 
-VkDescriptorPool Element::VknPipeline::GetVkDescriptorPool()
-{
-    return m_descriptorPool;
-}
+//VkDescriptorPool Element::VknPipeline::GetVkDescriptorPool()
+//{
+//    return m_descriptorPool;
+//}
 
 VkDescriptorPool Element::VknPipeline::allocateDescriptorPool(uint32_t descriptorCount) {
 
-    for (auto& pool : m_descriptorPools) {
+    for (auto& pool : descriptorPools) {
         if (!pool->isFull(descriptorCount))
             return pool->getVkDescriptorPool();
     }
 
-    auto& pool = m_descriptorPools.emplace_back(
-            Locator::getVknResource()->allocateDescriptorPool(
-            m_pipelineData, m_swapChain->getImageCount()));
+    auto& pool = descriptorPools.emplace_back();
+    pool = std::make_unique<VknDescriptorPool>();
+    pool->init(m_pipelineData, m_swapChain->getImageCount());
     return pool->getVkDescriptorPool();
 }

@@ -74,12 +74,9 @@ void Element::DescriptorSet::createDescWriteAndUpdate(std::vector<void*>& data)
             case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER: {
 
                 auto buffer = reinterpret_cast<Buffer*>(d);
-                //Debugger::get().log(static_cast<float>(buffer[0].m_size));
                 auto& write = descriptorWrites.emplace_back();
                 writeDescriptor(write, descriptorSets[i],
                                 &buffer[i].m_descriptorInfo, binding.descriptorType, binding.binding);
-//                descriptorWrites.emplace_back(Element::VkInitializers::writeDesciptorSet(descriptorSets[i], binding.descriptorType,
-//                    &buffer[i].m_descriptorInfo, binding.binding));
                 break;
             }
             case VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: {
@@ -152,9 +149,6 @@ void Element::DescriptorSet::createDescWritesAndUpdate()
                     buffer[i].binding = binding.binding;
                     writeDescriptor(descriptorWrites[binding.binding], descriptor,
                                     &buffer[i].m_descriptorInfo, binding.descriptorType, binding.binding);
-//                    descriptor.second[binding.binding] = Element::VkInitializers::writeDesciptorSet(
-//                            descriptor.first, binding.descriptorType,
-//                            &buffer[i].m_descriptorInfo, binding.binding);
                     break;
                 }
                 case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC: {
@@ -173,13 +167,17 @@ void Element::DescriptorSet::createDescWritesAndUpdate()
                     writeDescriptor(descriptorWrites[binding.binding], descriptor,
                                     &texture->m_image.m_descriptorInfo, binding.descriptorType, binding.binding);
 
-//                    descriptor.second.emplace_back(Element::VkInitializers::writeDesciptorSet(
-//                            descriptor.first, binding.descriptorType,
-//                    &texture->m_image.m_descriptorInfo, binding.binding));
                     break;
                 }
                 case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER: {
+                    auto buffer = reinterpret_cast<Buffer*>(d);
+                    //Debugger::get().log(static_cast<float>(buffer[0].m_size));
+                    if(binding.binding >= descriptorWrites.size())
+                        descriptors.second[i].emplace_back();
 
+                    buffer[i].binding = binding.binding;
+                    writeDescriptor(descriptorWrites[binding.binding], descriptor,
+                                    &buffer[i].m_descriptorInfo, binding.descriptorType, binding.binding);
                     break;
                 }
                 case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC: {
@@ -209,7 +207,8 @@ void Element::DescriptorSet::flush()
 
     const auto& logicalDevice = Device::getVkDevice();
     vkDeviceWaitIdle(logicalDevice);
-    vkFreeDescriptorSets(logicalDevice, pipeline->GetVkDescriptorPool(), static_cast<uint32_t>(descriptorSets.size()), descriptorSets.data());
+    //vkFreeDescriptorSets(logicalDevice, pipeline->GetVkDescriptorPool(), static_cast<uint32_t>(descriptorSets.size()
+   // ), descriptorSets.data());
     pipeline = nullptr;
 }
 
@@ -271,4 +270,8 @@ void Element::DescriptorSet::updateImageInfo(const VkDescriptorImageInfo* imageI
                                static_cast<uint32_t>(descriptor.size()),
                                descriptor.data(), 0, nullptr);
     }
+}
+
+void Element::DescriptorSet::replaceData(void* _data, int placement) {
+    data[placement] = _data;
 }

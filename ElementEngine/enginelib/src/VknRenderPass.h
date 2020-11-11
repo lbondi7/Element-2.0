@@ -37,5 +37,7 @@ namespace Element {
 		SwapChain* m_swapChain;
 
 		glm::vec3 m_clearColour{0.0f, 0.3f, 0.8f};
+
+		bool created  = false;
 	};
 }

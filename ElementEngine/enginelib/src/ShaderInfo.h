@@ -14,16 +14,10 @@ namespace Element{
         ShaderType shaderType = ShaderType::VERTEX;
         std::string shader = "shader";
         uint32_t binding = 0;
-        uint32_t count = 10000;
+        uint32_t count = 1;
 
-
-        ShaderInfo& operator=(const ShaderInfo& other) {
-            this->bindObjectType = other.bindObjectType;
-            this->binding = other.binding;
-            this->shaderType = other.shaderType;
-            this->shader = other.shader;
-            return *this;
-        }
+        bool operator==(const ShaderInfo& other) const = default;
+        ShaderInfo& operator=(const ShaderInfo& other) = default;
     };
 }
  //VULKANTEST_DESCRIPTORINFO_H

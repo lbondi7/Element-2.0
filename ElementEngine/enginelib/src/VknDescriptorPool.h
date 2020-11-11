@@ -31,6 +31,7 @@ namespace Element {
 
         bool isFlushed() const;
 
+        PipelineData pipelineData;
     private:
 
         VkDescriptorPool m_vkDescriptorPool;

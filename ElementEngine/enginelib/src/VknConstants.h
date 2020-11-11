@@ -11,20 +11,6 @@
 #include <array>
 #include <optional>
 
-const std::vector<const char*> validationLayers = {
-    "VK_LAYER_KHRONOS_validation",
-    "VK_LAYER_LUNARG_monitor"
-};
-
-const std::vector<const char*> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-};
-
-#ifdef NDEBUG
-const bool enableValidationLayers = true;
-#else
-const bool enableValidationLayers = true;
-#endif
 
 struct QueueIndices {
 
@@ -75,9 +61,10 @@ struct Vertex {
     glm::vec3 normal;
     glm::vec2 texCoord;
 
-    bool operator==(const Vertex& other) const {
-        return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
-    }
+    bool operator==(const Vertex& other) const = default;
+//    {
+//        return pos == other.pos && normal == other.normal && texCoord == other.texCoord;
+//    }
 
     Vertex& operator=(const Vertex& other)= default;
 

@@ -14,12 +14,13 @@ Element::VknDescriptorPool::~VknDescriptorPool() {
 
 }
 
-void Element::VknDescriptorPool::init(const PipelineData& pipelineData,
+void Element::VknDescriptorPool::init(const PipelineData& _pipelineData,
                                       uint32_t imageCount) {
     if(!flushed)
         return;
 
     flushed = false;
+    pipelineData = _pipelineData;
     uint32_t requireSetInfo = 0;
     std::vector<VkDescriptorPoolSize> poolSizes;
     for (const auto& binding : pipelineData.shaderInfo)

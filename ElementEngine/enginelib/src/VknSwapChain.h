@@ -36,9 +36,9 @@ namespace Element {
         uint32_t getImageCount();
         uint32_t& CurrentImageIndex();
 
-        void DestroyDepthResource();
-
-        void DestroyColourResource();
+//        void DestroyDepthResource();
+//
+//        void DestroyColourResource();
 
         void Destroy();
         void createSwapChain(GLFWwindow* window, VkSurfaceKHR surface);
@@ -60,6 +60,10 @@ namespace Element {
         void createImageViews();
 
         VkExtent2D chooseSwapExtent(GLFWwindow* window, const VkSurfaceCapabilitiesKHR& capabilities);
+
+        bool created = false;
+    public:
+        bool isCreated() const;
     };
 }
 

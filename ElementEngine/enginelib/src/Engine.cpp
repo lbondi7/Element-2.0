@@ -2,6 +2,7 @@
 
 #include "VknRenderer.h"
 #include "VknConstants.h"
+#include "ValidationLayers.h"
 #include "ImGUI_.h"
 
 #include <element/Debugger.h>
@@ -41,6 +42,7 @@ void Element::Engine::run()
         }
         Inputs::get().clear();
     }
+    deInit();
 }
 
 void Element::Engine::renderFrame()
@@ -62,6 +64,11 @@ void Element::Engine::start()
 {
     m_renderer = std::make_unique<VknRenderer>();
     m_renderer->init();
+}
+
+void Element::Engine::deInit() {
+    m_renderer->deInit();
+    ValidationLayers::get().Destroy();
 }
 
 

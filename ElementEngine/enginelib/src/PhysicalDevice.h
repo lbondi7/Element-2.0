@@ -3,6 +3,7 @@
 #include "VknConstants.h"
 
 namespace Element {
+
 	class PhysicalDevice
 	{
 	public:
@@ -12,8 +13,10 @@ namespace Element {
 			VkPhysicalDeviceMemoryProperties m_memoryProperties;
 			VkPhysicalDeviceFeatures m_supportedFeatures;
 			VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+            VkSampleCountFlagBits maxMsaaSamples = VK_SAMPLE_COUNT_1_BIT;
 			uint16_t score = 0;
 			uint32_t id = 0;
+			std::vector<const char*> requiredExtensions;
 		};
 
 		PhysicalDevice(VkInstance instance, VkSurfaceKHR surface);
@@ -21,7 +24,7 @@ namespace Element {
 
 		const PhysicalDeviceData& GetSelectedDevice();
 
-		VkSampleCountFlagBits getMaxUsableSampleCount(const Element::PhysicalDevice::PhysicalDeviceData& data);
+		VkSampleCountFlagBits getMaxUsableSampleCount(Element::PhysicalDevice::PhysicalDeviceData& data);
 
 	private:
 

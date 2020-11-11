@@ -57,22 +57,31 @@ uint32_t& Element::SwapChain::CurrentImageIndex()
     return m_imageIndex;
 }
 
-void Element::SwapChain::DestroyDepthResource()
-{
-    vkDestroyImageView(Device::getVkDevice(), m_depthImageView, nullptr);
-    m_depthImage.Destroy();
-}
-
-
-void Element::SwapChain::DestroyColourResource()
-{
-    vkDestroyImageView(Device::getVkDevice(), m_colourImageView, nullptr);
-    m_colourImage.Destroy();
-}
+//void Element::SwapChain::DestroyDepthResource()
+//{
+//    vkDestroyImageView(Device::getVkDevice(), m_depthImageView, nullptr);
+//    m_depthImage.Destroy();
+//}
+//
+//
+//void Element::SwapChain::DestroyColourResource()
+//{
+//    vkDestroyImageView(Device::getVkDevice(), m_colourImageView, nullptr);
+//    m_colourImage.Destroy();
+//}
 
 void Element::SwapChain::Destroy()
 {
+    if(!created)
+        return;
+
+    created = false;
     auto logicalDevice = Device::getVkDevice();
+
+    vkDestroyImageView(logicalDevice, m_colourImageView, nullptr);
+    m_colourImage.Destroy();
+    vkDestroyImageView(logicalDevice, m_depthImageView, nullptr);
+    m_depthImage.Destroy();
     for (auto imageView : m_imageViews) {
         vkDestroyImageView(logicalDevice, imageView, nullptr);
     }
@@ -81,6 +90,9 @@ void Element::SwapChain::Destroy()
 }
 
 void Element::SwapChain::createSwapChain(GLFWwindow* window, VkSurfaceKHR surface) {
+
+    if(created)
+        return;
 
     auto logicalDevice = Device::getVkDevice();
     auto physicalDevice = Device::GetVkPhysicalDevice();
@@ -134,6 +146,7 @@ void Element::SwapChain::createSwapChain(GLFWwindow* window, VkSurfaceKHR surfac
 
     m_imageFormat = surfaceFormat.format;
     m_extent = extent;
+    created = true;
 }
 
 void Element::SwapChain::createImageViews() {
@@ -206,4 +219,8 @@ VkFormat Element::SwapChain::findDepthFormat() {
         VK_IMAGE_TILING_OPTIMAL,
         VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
     );
+}
+
+bool Element::SwapChain::isCreated() const {
+    return created;
 }

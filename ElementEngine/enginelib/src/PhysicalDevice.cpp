@@ -6,6 +6,10 @@
 #include <stdexcept>
 #include <set>
 
+const std::vector<const char*> deviceExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+};
+
 Element::PhysicalDevice::PhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
 {
     uint32_t deviceCount = 0;
@@ -34,6 +38,7 @@ Element::PhysicalDevice::PhysicalDevice(VkInstance instance, VkSurfaceKHR surfac
             m_selectedPhysicalDevice.m_physicalDevice = device.m_physicalDevice;
             m_selectedPhysicalDevice.id = device.id;
             m_selectedPhysicalDevice.msaaSamples = device.msaaSamples;
+            m_selectedPhysicalDevice.requiredExtensions = device.requiredExtensions;
             bestScore = device.score;
         }
     }
@@ -57,10 +62,17 @@ const Element::PhysicalDevice::PhysicalDeviceData& Element::PhysicalDevice::GetS
 
 }
 
-VkSampleCountFlagBits Element::PhysicalDevice::getMaxUsableSampleCount(const Element::PhysicalDevice::PhysicalDeviceData& data) {
+VkSampleCountFlagBits Element::PhysicalDevice::getMaxUsableSampleCount(Element::PhysicalDevice::PhysicalDeviceData& data) {
 
     VkSampleCountFlags counts = data.m_properties.limits.framebufferColorSampleCounts & data.m_properties.limits.framebufferDepthSampleCounts;
 
+    data.maxMsaaSamples = (counts & VK_SAMPLE_COUNT_64_BIT) ? VK_SAMPLE_COUNT_64_BIT :
+                          (counts & VK_SAMPLE_COUNT_32_BIT) ? VK_SAMPLE_COUNT_32_BIT :
+                          (counts & VK_SAMPLE_COUNT_16_BIT) ? VK_SAMPLE_COUNT_16_BIT :
+                           (counts & VK_SAMPLE_COUNT_8_BIT) ? VK_SAMPLE_COUNT_8_BIT :
+                            (counts & VK_SAMPLE_COUNT_4_BIT) ? VK_SAMPLE_COUNT_4_BIT :
+                             (counts & VK_SAMPLE_COUNT_2_BIT) ? VK_SAMPLE_COUNT_2_BIT :
+                          VK_SAMPLE_COUNT_1_BIT;
     auto& instance = GameSettings::get();
     int multisample = static_cast<int>(instance.msaaLevel);
     if (multisample >= 6 && counts & VK_SAMPLE_COUNT_64_BIT) { 
@@ -140,7 +152,7 @@ void Element::PhysicalDevice::GetDeviceScore(VkPhysicalDevice physicalDevice, Vk
     QueueIndices indices = Element::VkFunctions::findQueueFamilies(physicalDevice, surface);
 
     deviceData.score = ScoreDevice(physicalDevice);
-
+    deviceData.requiredExtensions = deviceExtensions;
     if (deviceData.score == 0){
         return;
     }
@@ -177,6 +189,7 @@ uint32_t Element::PhysicalDevice::ScoreDevice(VkPhysicalDevice device) {
 
     uint32_t score = 0;
     std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
     int requredExtensionCount = requiredExtensions.size();
     for (const auto& reqExt : requiredExtensions)
     {

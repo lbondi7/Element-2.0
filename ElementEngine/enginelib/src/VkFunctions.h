@@ -16,7 +16,7 @@ namespace Element {
 
 		uint32_t GetMemoryType(const VkPhysicalDeviceMemoryProperties& memProperties, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-		bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+		//bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 
 		VkFormat findSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 

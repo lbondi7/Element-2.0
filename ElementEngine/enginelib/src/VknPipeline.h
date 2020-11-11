@@ -36,7 +36,7 @@ namespace Element {
 		VkDescriptorSetLayout GetVkDescriptorSetLayout();
 		VkPipeline GetVkPipeline();
 		VkPipelineLayout GetVkPipelineLayout();
-		VkDescriptorPool GetVkDescriptorPool();
+		//VkDescriptorPool GetVkDescriptorPool();
 
 		VkDescriptorPool allocateDescriptorPool(uint32_t descriptorCount);
 
@@ -61,17 +61,19 @@ namespace Element {
 	private:
 		SwapChain* m_swapChain;
 		RenderPass* m_renderPass;
-		VkDescriptorSetLayout m_descriptorSetLayout{};
-		VkPipelineLayout m_pipelineLayout{};
-		VkPipeline m_vkPipeline{};
-		VkDescriptorPool m_descriptorPool{};
+		VkDescriptorSetLayout m_descriptorSetLayout;
+		VkPipelineLayout m_pipelineLayout;
+		VkPipeline m_vkPipeline;
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 		PipelineData m_pipelineData;
 		bool flushed = false;
 		bool bound = false;
 
+        std::vector<std::unique_ptr<VknDescriptorPool>> descriptorPools;
 		std::vector<VknDescriptorPool*> m_descriptorPools;
 
 		std::string name;
-	};
+
+        void reCreateDescriptorPool();
+    };
 }

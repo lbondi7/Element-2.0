@@ -51,10 +51,9 @@ void Element::Instance::init() {
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
         createInfo.ppEnabledLayerNames = validationLayers.data();
 
-        Element::ValidationLayers::populateDebugMessengerCreateInfo(debugCreateInfo);
-        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
-    }
-    else {
+        Element::ValidationLayers::get().populateDebugMessengerCreateInfo(debugCreateInfo);
+        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
+    } else {
         createInfo.enabledLayerCount = 0;
 
         createInfo.pNext = nullptr;
@@ -63,6 +62,9 @@ void Element::Instance::init() {
     if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
     }
+
+    if (enableValidationLayers)
+        Element::ValidationLayers::get().setupDebugMessenger(instance);
 }
 
 std::vector<const char*> Element::Instance::getRequiredExtensions() {

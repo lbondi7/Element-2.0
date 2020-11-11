@@ -26,6 +26,7 @@ namespace Element {
 		void renderFrame();
 		void endFrame();
 		void start();
+		void deInit();
 	};
 
 }

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <element/Maths/Vec3.h>
+#include "Buffer.h"
 
 namespace Element {
 
@@ -29,6 +30,11 @@ namespace Element {
     struct Material {
 
         MaterialData data;
+
+        std::vector<Buffer> uniformBuffers;
+
+        void destroy();
+        void load();
 
     };
 }

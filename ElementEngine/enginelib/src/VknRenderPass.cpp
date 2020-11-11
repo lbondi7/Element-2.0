@@ -23,13 +23,18 @@ Element::RenderPass::~RenderPass()
 
 void Element::RenderPass::init(SwapChain* swapChain)
 {
+    if(created)
+        return;
+
     m_swapChain = swapChain;
 
     createVkRenderPass();
     createFrameBuffers();
+    created = true;
 }
 
 void Element::RenderPass::createVkRenderPass() {
+
     const auto& samples = Device::GetPhysicalDevice()->GetSelectedDevice().msaaSamples;
 
     bool isMSAAx1 = samples & VK_SAMPLE_COUNT_1_BIT;
@@ -99,6 +104,11 @@ void Element::RenderPass::createFrameBuffers()
 
 void Element::RenderPass::Destroy()
 {
+    if(!created)
+        return;
+
+    created = false;
+
     if(m_vkRenderPass != VK_NULL_HANDLE)
         vkDestroyRenderPass(Device::getVkDevice(), m_vkRenderPass, nullptr);
     m_vkRenderPass = VK_NULL_HANDLE;

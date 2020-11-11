@@ -45,7 +45,7 @@ void Element::VknRenderer::init()
     instance = std::make_unique<Instance>();
 
     createSurface();
-    debugLayers.setupDebugMessenger(instance->GetVkInstance());
+    //debugLayers.setupDebugMessenger(instance->GetVkInstance());
 
     Device::setupPhysicalDevice(instance->GetVkInstance(), surface);
     Device::setupLogicalDevice(surface);
@@ -74,8 +74,6 @@ void Element::VknRenderer::deInit()
     Device::destroy();
 
     destroySurface();
-
-    debugLayers.Destroy();
 }
 
 void Element::VknRenderer::beginFrame()
@@ -98,23 +96,12 @@ void Element::VknRenderer::beginFrame()
 
 void Element::VknRenderer::renderFrame()
 {
-//    ImGuiIO& io = ImGui::GetIO();
-//
-//    io.DisplaySize = ImVec2(window->getSize().x, window->getSize().y);
-//
-//    auto mousePos = Inputs::Get().getCursorPos();
-//    io.MousePos = ImVec2(mousePos.x, mousePos.y);
-//    //Debugger::Get().log("Mouse X", io.MousePos.x);
-//    //Debugger::Get().log("Mouse y", io.MousePos.y);
-//    io.MouseDown[0] = Inputs::Get().buttonDown(Element::MOUSE_BUTTON::LEFT) || Inputs::Get().buttonHeld(Element::MOUSE_BUTTON::LEFT);
-//    io.MouseDown[1] = Inputs::Get().buttonDown(Element::MOUSE_BUTTON::RIGHT);
-
     CheckModels();
     CheckSprites();
-
     //if (rebuildCmdBuffers || debugRenderer->isInvalid())
         rebuildCommandBuffers();
 
+    m_lightManager->update(swapChain->CurrentImageIndex());
     camera->update(window->getSize().x, window->getSize().y, swapChain->CurrentImageIndex());
     updateUniformBuffers();
     camera->setCameraChanged(false);
@@ -180,11 +167,26 @@ void Element::VknRenderer::createRenderer() {
 
     m_pipelineManager = std::make_unique<PipelineManager>(swapChain.get(), renderPass.get());
 
+    //Debugger::get().log("Max Viewports", (int)Device::GetPhysicalDevice()->GetSelectedDevice().m_properties.limits
+    //.maxDescriptorSetUniformBuffers);
+
     PipelineData pipelineData{};
-    pipelineData.shaderInfo.push_back({BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
-                                       "shader3", 0, 1000 });
-    pipelineData.shaderInfo.push_back({BindObjectType::IMAGE, ShaderType::FRAGMENT,
-                                       "shader3", 1, 1 });
+    ShaderInfo shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
+                             "shader3", 0, 1000 };
+    pipelineData.shaderInfo.emplace_back(shaderInfo);
+    shaderInfo = {BindObjectType::IMAGE, ShaderType::FRAGMENT,
+                  "shader3", 1, 1 };
+    pipelineData.shaderInfo.push_back(shaderInfo);
+    shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
+                  "shader3", 2, 1 };
+    pipelineData.shaderInfo.push_back(shaderInfo);
+
+    shaderInfo = {BindObjectType::STATIC_STORAGE_BUFFER, ShaderType::FRAGMENT,
+                  "shader3", 3, 1 };
+    pipelineData.shaderInfo.push_back(shaderInfo);
+    shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
+                  "shader3", 4, 1 };
+    pipelineData.shaderInfo.push_back(shaderInfo);
 
     m_pipelineManager->generatePipeline("default", pipelineData);
 
@@ -200,6 +202,8 @@ void Element::VknRenderer::createRenderer() {
     debugRenderer = std::make_unique<DebugRenderer>();
     debugRenderer->init(renderPass->GetVkRenderPass());
 
+    m_lightManager = std::make_unique<LightManager>(swapChain->getImageCount());
+
     rebuildCommandBuffers();
     createSyncObjects();
 }
@@ -213,15 +217,10 @@ void Element::VknRenderer::cleanupSwapChain() {
 
     vkDeviceWaitIdle(Device::getVkDevice());
     //Locator::getVknResource()->destroy();
-    swapChain->DestroyDepthResource();
-    swapChain->DestroyColourResource();
-
+    //Locator::getVknResource()->flush();
     m_pipelineManager->flush();
     renderPass->Destroy();
-
     swapChain->Destroy();
-
-    Locator::deInit();
 }
 
 void Element::VknRenderer::cleanupRenderer() {
@@ -240,6 +239,7 @@ void Element::VknRenderer::cleanupRenderer() {
     }
 
     m_pipelineManager->destroy();
+    m_lightManager->deInit();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(logicalDevice, presentSemaphores[i], nullptr);
@@ -248,6 +248,8 @@ void Element::VknRenderer::cleanupRenderer() {
     }
 
     graphicsCommandPool->destroyVkCommandPool();
+
+    Locator::getResource()->destroy();
 }
 
 void Element::VknRenderer::rebuildCommandBuffers() {
@@ -469,10 +471,13 @@ Element::Model* Element::VknRenderer::createModel()
     //model->descriptorSet = VknResources::get().allocateDescriptorSet();
 //    model->descriptorSet->init(model->GetPipeline(), swapChain->getImageCount());
 //
-     std::vector<void*>data{model->GetUniformBuffers().data(), model->GetTexture()};
+     //std::vector<void*>data{model->GetUniformBuffers().data(), model->GetTexture()};
 
     model->descriptorSet->addData(model->GetUniformBuffers().data());
     model->descriptorSet->addData(model->GetTexture());
+    model->descriptorSet->addData(Locator::getResource()->material("test")->uniformBuffers.data());
+    model->descriptorSet->addData(m_lightManager->getLightBuffers().data());
+    model->descriptorSet->addData(m_lightManager->getLightConstantsBuffers().data());
     model->descriptorSet->createDescWritesAndUpdate();
 //    model->descriptorSet->createDescWritesAndUpdate(model->GetUniformBuffers(), model->GetTexture());
     return dynamic_cast<Model*>(model.get());

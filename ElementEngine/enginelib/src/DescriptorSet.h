@@ -33,6 +33,8 @@ namespace Element{
 
 		void addData(void* _data);
 
+		void replaceData(void* _data, int placement);
+
 		//void updateDescriptorSet(void* _data, uint32_t binding = -1);
 
         void updateBufferInfo(const VkDescriptorBufferInfo *bufferInfo, uint32_t binding = 1);

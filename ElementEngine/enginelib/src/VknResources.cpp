@@ -16,8 +16,10 @@ Element::VknDescriptorPool *Element::VknResources::allocateDescriptorPool(
 
     for (auto& pool : descriptorPools)
     {
-        if(pool->isFlushed()) {
-            pool->init(pipelineData, imageCount);
+        if(pipelineData == pool->pipelineData) {
+            if(pool->isFlushed())
+                pool->init(pipelineData, imageCount);
+
             return pool.get();
         }
     }

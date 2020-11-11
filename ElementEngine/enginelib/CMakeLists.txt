@@ -65,8 +65,6 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Resources.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Shader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Shader.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ShaderManager.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ShaderManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Sprite.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.h
@@ -110,7 +108,7 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VknResources.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VknResources.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.h src/Locator.cpp src/Locator.h src/Light.cpp src/Light.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.h src/Locator.cpp src/Locator.h src/Light.cpp include/element/Light.h src/LightManager.cpp src/LightManager.h)
 
 target_include_directories(
     ${PROJECT_NAME} SYSTEM PUBLIC

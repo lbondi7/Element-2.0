@@ -108,6 +108,7 @@ void Element::Resources::LoadMaterialData(const char *file, MaterialData& materi
     materialData.ambient = Vec3(materials[0].ambient);
     materialData.diffuse = Vec3(materials[0].diffuse);
     materialData.specular = Vec3(materials[0].specular);
+    materialData.emission = Vec3(materials[0].emission);
     materialData.transmittance = Vec3(materials[0].transmittance);
     materialData.shininess = materials[0].shininess;
     materialData.dissolve = materials[0].dissolve;
@@ -199,6 +200,10 @@ void Element::Resources::init() {
     std::string texts[2]{ "default.jpg", "texture.jpg" };
     for (const auto& name : texts)
         texture(name);
+
+    std::string mats[1]{ "test.mtl"};
+    for (const auto& name : mats)
+        material(name);
 }
 
 void Element::Resources::destroy() {
@@ -223,6 +228,12 @@ void Element::Resources::destroy() {
 
     for (auto& shader: geometry_shaders)
         shader.second->destroy();
+
+    for (auto& material: static_materials)
+        material.second->destroy();
+
+    for (auto& material: dynamic_materials)
+        material.second->destroy();
 
 }
 
@@ -251,6 +262,7 @@ Element::Material *Element::Resources::material(const std::string &name, Element
 
     material = std::make_unique<Material>();
     LoadMaterialData(name.c_str(), material->data);
+    material->load();
     return material.get();
 }
 

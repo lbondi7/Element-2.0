@@ -36,21 +36,21 @@ uint32_t Element::VkFunctions::GetMemoryType(const VkPhysicalDeviceMemoryPropert
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-bool Element::VkFunctions::checkDeviceExtensionSupport(VkPhysicalDevice device) {
-    uint32_t extensionCount;
-    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
-
-    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-
-    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-
-    for (const auto& extension : availableExtensions) {
-        requiredExtensions.erase(extension.extensionName);
-    }
-
-    return requiredExtensions.empty();
-}
+//bool Element::VkFunctions::checkDeviceExtensionSupport(VkPhysicalDevice device) {
+//    uint32_t extensionCount;
+//    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+//
+//    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+//    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+//
+//    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+//
+//    for (const auto& extension : availableExtensions) {
+//        requiredExtensions.erase(extension.extensionName);
+//    }
+//
+//    return requiredExtensions.empty();
+//}
 
 VkFormat Element::VkFunctions::findSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
     for (VkFormat format : candidates) {

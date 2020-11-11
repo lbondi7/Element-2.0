@@ -42,20 +42,6 @@ Element::VknPipeline* Element::VknModel::GetPipeline()
 	return pipeline;
 }
 
-//const Element::Mesh* Element::VknModel::GetMesh() const noexcept
-//{
-//	return mesh;
-//}
-//
-//const Element::Texture* Element::VknModel::GetTexture() const noexcept
-//{
-//	return texture;
-//}
-//
-//const Element::Pipeline* Element::VknModel::GetPipeline() const noexcept
-//{
-//	return pipeline;
-//}
 
 void Element::VknModel::SetMesh(Mesh* _mesh)
 {
@@ -198,9 +184,9 @@ void Element::VknModel::reInit(uint32_t imageCount)
 	entityState = EntityState::NOT_RENDERED;
 	prevEntityState = EntityState::NOT_RENDERED;
 	//descriptorSet = std::make_unique<DescriptorSet>();
-	descriptorSet->init(pipeline, imageCount);
-    std::vector<void*>data{uniformBuffers.data(), texture};
-	descriptorSet->createDescWriteAndUpdate(data);
+	descriptorSet->init(pipeline, imageCount, 0);
+    //std::vector<void*>data{uniformBuffers.data(), texture};
+	descriptorSet->createDescWritesAndUpdate();
 	dirty = DirtyFlags::DIRTY;
 }
 

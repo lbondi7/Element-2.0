@@ -14,13 +14,12 @@ Game::Game()
     GameSettings::get().gameDimension = GameSettings::Dimension::_3D;
     GameSettings::get().windowMode = WindowMode::WINDOWED;
     GameSettings::get().fpsLimit = 60;
-    GameSettings::get().msaaLevel = GameSettings::Multisample::MSAA_1;
+    GameSettings::get().msaaLevel = GameSettings::Multisample::MSAA_8;
     GameSettings::get().depthEnabled = true;
 } 
 
 Game::~Game()
 {
-    m_renderer->deInit();
 }
 
 void Game::init()
@@ -122,7 +121,7 @@ void Game::render()
 		m_renderer->renderModel(object.model);
 	}
 	//if(Help)
-		m_renderer->renderSprite(sprite);
+		//m_renderer->renderSprite(sprite);
 
 
 

@@ -17,11 +17,8 @@ struct PipelineData {
     bool depthEnabled = GameSettings::get().depthEnabled;
     int Topology = 0;
 
-    PipelineData& operator=(const PipelineData& other) {
-
-        this->shaderInfo = other.shaderInfo;
-        return *this;
-    }
+    bool operator==(const PipelineData& other) const = default;
+    PipelineData& operator=(const PipelineData& other) = default;
 };
 }
 

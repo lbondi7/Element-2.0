@@ -25,6 +25,12 @@ namespace Element {
 			MSAA_64 = 6,
 		};
 
+		enum class Pipelines : int {
+		    STANDARD = 0,
+		    LIGHTING = 1,
+		    PBR = 2
+		};
+
 		static GameSettings& get(){
 			static GameSettings gameSettings;
 			return gameSettings;
@@ -36,12 +42,12 @@ namespace Element {
 		WindowMode windowMode = WindowMode::WINDOWED;
 		Dimension gameDimension = Dimension::_2D;
 		Multisample msaaLevel = Multisample::MSAA_1;
+		Pipelines pipelines = Pipelines::STANDARD;
 		int fpsLimit = 60;
 		bool depthEnabled = true;
 
-
+	private:
 		GameSettings() = default;
 		~GameSettings() = default;
-	private:
 	};
 }

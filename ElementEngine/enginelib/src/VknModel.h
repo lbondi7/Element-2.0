@@ -25,17 +25,6 @@ namespace Element {
 
         VknPipeline *GetPipeline() override;
 
-//        bool operator==(const VknModel &other) {
-//            return this->mesh == other.mesh &&
-//                   this->texture == other.texture &&
-//                   this->pipeline == other.pipeline;
-//        }
-
-//		const Mesh* GetMesh() const noexcept override;
-//		const Texture* GetTexture() const noexcept override;
-//		const Pipeline* GetPipeline() const noexcept override;
-//      const Pipeline* GetOldPipeline() const noexcept override;
-
         void SetMesh(Mesh *mesh) override;
 
         void SetTexture(Texture *texture) override;

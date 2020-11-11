@@ -7,13 +7,13 @@
 #include "VknSwapChain.h"
 #include "VknRenderPass.h"
 #include "CommandPool.h"
-#include "ValidationLayers.h"
 #include "CommandBuffer.h"
 #include "VknInstance.h"
 #include "VknWindow.h"
 #include "PipelineManager.h"
 #include "DebugRenderer.h"
 #include "EleCamera.h"
+#include "LightManager.h"
 
 namespace Element {
 
@@ -89,7 +89,6 @@ namespace Element {
 
 		std::unique_ptr<Instance> instance;
 		VkSurfaceKHR surface;
-		ValidationLayers debugLayers;
 
 		std::unique_ptr<SwapChain> swapChain;
 		std::unique_ptr<RenderPass> renderPass;
@@ -109,6 +108,8 @@ namespace Element {
 		bool rebuildCmdBuffers = false;
 
 		std::unique_ptr<DebugRenderer> debugRenderer;
+
+		std::unique_ptr<LightManager> m_lightManager;
 
 		EleCamera* camera;
     };
