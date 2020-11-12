@@ -48,9 +48,9 @@ void Game::init()
 	//camera->SetPosY(m_renderer->getWindow()->getSize().y );
 	m_renderer->setCamera(camera);
 
-	sprite = m_renderer->createNewSprite();
-	sprite->GetTransform().setPosition(0.0f, 0.0f);
-	sprite->GetTransform().setSize(100, 100);
+	//sprite = m_renderer->createNewSprite();
+	//sprite->GetTransform().setPosition(0.0f, 0.0f);
+	//sprite->GetTransform().setSize(100, 100);
 	frameTime.resize(10);
 }
 

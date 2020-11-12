@@ -58,6 +58,8 @@ namespace Element {
 
 		const std::string& getName();
 
+        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
+        VkDescriptorSetLayout m_viewDescSetLayout;
 	private:
 		SwapChain* m_swapChain;
 		RenderPass* m_renderPass;
@@ -71,9 +73,10 @@ namespace Element {
 
         std::vector<std::unique_ptr<VknDescriptorPool>> descriptorPools;
 		std::vector<VknDescriptorPool*> m_descriptorPools;
-
 		std::string name;
 
         void reCreateDescriptorPool();
+
+        void createPipelineLayoutTemp();
     };
 }

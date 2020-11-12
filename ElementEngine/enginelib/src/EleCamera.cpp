@@ -4,10 +4,20 @@
 
 #include "EleCamera.h"
 #include "Utilities.h"
+#include "Locator.h"
+#include "VknResources.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
 //#include <algorithm>
+struct CamConst{
+    alignas(16) glm::mat4 view = glm::mat4(1.0f);
+    alignas(16) glm::mat4 proj = glm::mat4(1.0f);
+    alignas(16) Vec3 camPos = Vec3(0.0f);
+    float padding;
+};
+
+
 
 Element::EleCamera::EleCamera()
 {
@@ -27,6 +37,13 @@ Element::EleCamera::EleCamera(Element::CameraType _type) {
     rect = { 0, 0, 1, 1 };
     zoom = 1.f;
     cameraChanged = true;
+
+    uniformBuffers.resize(3);
+    for (auto& buffer : uniformBuffers)
+    {
+        buffer.Create(sizeof(CamConst), 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        buffer.Map();
+    }
 }
 
 
@@ -108,7 +125,7 @@ void Element::EleCamera::update(float windowWidth, float windowHeight, uint32_t 
     auto aspectRatio = widthLonger ? windowWidth / windowHeight : windowHeight / windowWidth;
     if (type == CameraType::PERSPECTIVE)
     {
-        projectionMatrix = glm::perspective(glm::radians(FOV), aspectRatio, 0.1f, 1000.0f);
+        projectionMatrix = glm::perspective(glm::radians(40.f), aspectRatio, 0.1f, 1000.0f);
     }
     else
     {
@@ -120,4 +137,59 @@ void Element::EleCamera::update(float windowWidth, float windowHeight, uint32_t 
 
     //projectionMatrix = glm::ortho(-zoom * windowWidth, windowWidth * zoom, -zoom * windowHeight,  windowHeight * zoom, 0.1f, 1000.0f);
     projectionMatrix[1][1] *= -1;
+
+
+    CamConst camUBO{};
+    camUBO.view = viewMatrix;
+    camUBO.proj = projectionMatrix;
+    camUBO.camPos = transform.getPosition();
+    camUBO.camPos.y *= -1;
+
+    uniformBuffers[imageIndex].CopyMemory(&camUBO, sizeof(camUBO));
+
+}
+
+const VkViewport &Element::EleCamera::getVkViewport() const {
+    return vkViewport;
+}
+
+void Element::EleCamera::setVkViewport(const VkViewport &vkViewport) {
+    EleCamera::vkViewport = vkViewport;
+}
+
+const VkRect2D &Element::EleCamera::getScissorRect() const {
+    return scissorRect;
+}
+
+void Element::EleCamera::setScissorRect(const VkRect2D &scissorRect) {
+    EleCamera::scissorRect = scissorRect;
+}
+
+void Element::EleCamera::setVkViewport(float x,float y,float w,float h, float minDepth, float maxDepth) {
+
+    vkViewport.x = x;
+    vkViewport.y = y;
+    vkViewport.width = w;
+    vkViewport.height = h;
+    vkViewport.minDepth = minDepth;
+    vkViewport.maxDepth = maxDepth;
+}
+
+Element::EleCamera::EleCamera(Element::CameraType _type, const glm::vec4 &viewport, const glm::vec4& rect) :
+viewport(viewport), rect(rect){
+
+    type = _type;
+    transform.setPosition(0.0f, 0.0f, -5.0f);
+    worldUp = Vec3( 0.0f, 1.0f, 0.0f );
+
+    zoom = 1.f;
+    cameraChanged = true;
+}
+
+void Element::EleCamera::initDescSet(Element::VknPipeline *pipeline, uint32_t imageCount, int id) {
+    descriptorSet = Locator::getVknResource()->allocateDescriptorSet();
+    descriptorSet->init(pipeline, imageCount, id);
+    descriptorSet->addData(uniformBuffers.data(), 0);
+    descriptorSet->createDescWritesAndUpdate();
+
 }

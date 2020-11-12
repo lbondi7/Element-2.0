@@ -6,7 +6,11 @@
 #include "Resources.h"
 #include "Device.h"
 #include "VkFunctions.h"
+#include "ImGUI_.h"
 
+#include <imgui.h>
+#include <glm/glm.hpp>
+#include <glm/gtc//matrix_transform.hpp>
 
 #include <element/Debugger.h>
 #include <element/Inputs.h>
@@ -45,16 +49,12 @@ void Element::VknRenderer::init()
     instance = std::make_unique<Instance>();
 
     createSurface();
-    //debugLayers.setupDebugMessenger(instance->GetVkInstance());
 
     Device::setupPhysicalDevice(instance->GetVkInstance(), surface);
     Device::setupLogicalDevice(surface);
 
     Locator::initResources(std::make_unique<Resources>());
     Locator::initVknResources(std::make_unique<VknResources>());
-
-    Maths::Vec3 vector = Maths::Vec3();
-    Debugger::get().log(vector.r);
 
     createRenderer();
 
@@ -96,13 +96,50 @@ void Element::VknRenderer::beginFrame()
 
 void Element::VknRenderer::renderFrame()
 {
+
+    uint32_t imageIndex = swapChain->CurrentImageIndex();
+
+    ImGui::Begin("Light");
+    ImGui::SliderInt("Type", &type, 0, 2);
+    ImGui::SliderFloat3("Pos", pos, -5.0f, 5.0f);
+    ImGui::SliderFloat3("Col", col, 0.0f, 1.0f);
+    ImGui::SliderFloat3("Atten", attenuation,  0.0f, 1.0f);
+    ImGui::SliderFloat3("Dir", dir, -1.0f, 1.0f);
+    ImGui::SliderFloat("Intensity", &intensity, 0.0f, 5.0f);
+    ImGui::SliderFloat("Cut Off", &cutOff, 0.0f, 20.0f);
+    ImGui::SliderFloat("Outer Cut Off", &outerCutOff, 0.0f, 20.0f);
+    //ImGui::ShowDemoWindow();
+    ImGui::End();
+    ImGUI::Get().end();
+
+    auto& light = m_lightManager->getLights()[0];
+    light->setType(static_cast<LightType>(type));
+    light->setPosition(pos[0],pos[1], pos[2]);
+    light->setColour(col[0],col[1], col[2]);
+    light->setConstant(attenuation[0]);
+    light->setLinear(attenuation[1]);
+    light->setQuadratic(attenuation[2]);
+    light->setCutOff(cutOff);
+    light->setOuterCutOff(outerCutOff);
+    light->setIntensity(intensity);
+
     CheckModels();
     CheckSprites();
     //if (rebuildCmdBuffers || debugRenderer->isInvalid())
         rebuildCommandBuffers();
 
-    m_lightManager->update(swapChain->CurrentImageIndex());
-    camera->update(window->getSize().x, window->getSize().y, swapChain->CurrentImageIndex());
+    m_lightManager->update(camera->getPos(), imageIndex);
+    cameras[0]->update(window->getSize().x, window->getSize().y, imageIndex);
+    cameras[1]->update(window->getSize().x, window->getSize().y, imageIndex);
+
+//    CamConst camubo{};
+//    camubo.proj = camera->getProjMatrix();
+//    camubo.view = camera->getViewMatrix();
+//    camubo.camPos = camera->getPos();
+//    camubo.camPos *= -1;
+//
+//    camBuffers[imageIndex].CopyMemory(&camubo, sizeof(camubo));
+
     updateUniformBuffers();
     camera->setCameraChanged(false);
 }
@@ -172,27 +209,20 @@ void Element::VknRenderer::createRenderer() {
 
     PipelineData pipelineData{};
     ShaderInfo shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
-                             "shader3", 0, 1000 };
+                             "defaultLighting", 2, 0, 1000 };
     pipelineData.shaderInfo.emplace_back(shaderInfo);
     shaderInfo = {BindObjectType::IMAGE, ShaderType::FRAGMENT,
-                  "shader3", 1, 1 };
-    pipelineData.shaderInfo.push_back(shaderInfo);
+                  "defaultLighting", 2,1};
+    pipelineData.shaderInfo.emplace_back(shaderInfo);
     shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
-                  "shader3", 2, 1 };
-    pipelineData.shaderInfo.push_back(shaderInfo);
-
-    shaderInfo = {BindObjectType::STATIC_STORAGE_BUFFER, ShaderType::FRAGMENT,
-                  "shader3", 3, 1 };
-    pipelineData.shaderInfo.push_back(shaderInfo);
-    shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
-                  "shader3", 4, 1 };
-    pipelineData.shaderInfo.push_back(shaderInfo);
+                  "defaultLighting", 2, 2};
+    pipelineData.shaderInfo.emplace_back(shaderInfo);
 
     m_pipelineManager->generatePipeline("default", pipelineData);
 
-    pipelineData.shaderInfo[0].shader = "shader2";
-    pipelineData.shaderInfo[1].shader = "shader2";
-    m_pipelineManager->generatePipeline("red", pipelineData);
+//    pipelineData.shaderInfo[0].shader = "shader2";
+//    pipelineData.shaderInfo[1].shader = "shader2";
+//    m_pipelineManager->generatePipeline("red", pipelineData);
 
     graphicsCommandPool = std::make_unique<CommandPool>();
     commandBuffers.resize(swapChain->getImageCount());
@@ -203,6 +233,41 @@ void Element::VknRenderer::createRenderer() {
     debugRenderer->init(renderPass->GetVkRenderPass());
 
     m_lightManager = std::make_unique<LightManager>(swapChain->getImageCount());
+
+    auto& desc = m_lightManager->descriptorSet;
+    desc = Locator::getVknResource()->allocateDescriptorSet();
+    desc->init(m_pipelineManager->getPipeline("default"),
+               swapChain->getImageCount(), 1);
+    desc->addData(m_lightManager->getLightBuffers().data(), 0);
+    desc->addData(m_lightManager->getLightConstantsBuffers().data(), 1);
+    desc->createDescWritesAndUpdate();
+
+
+    cameras.emplace_back(std::make_unique<EleCamera>(CameraType::PERSPECTIVE));
+    cameras[0]->initDescSet(m_pipelineManager->getPipeline("default"), swapChain->getImageCount(), 0);
+    cameras[0]->setViewport({0.0f, 0.0f, 0.5f, 1.0f});
+    cameras[0]->setRect({0.0f, 0.0f, 0.5f, 1.0f});
+
+    cameras.emplace_back(std::make_unique<EleCamera>(CameraType::PERSPECTIVE));
+    cameras[1]->initDescSet(m_pipelineManager->getPipeline("default"), swapChain->getImageCount(), 0);
+    cameras[1]->setViewport({0.5f, 0.0f, 0.5f, 1.0f});
+    cameras[1]->setRect({0.5f, 0.0f, 0.5f, 1.0f});
+    cameras[1]->setPosX(3);
+
+
+//    camBuffers.resize(swapChain->getImageCount());
+//    for (auto& buffer : camBuffers)
+//    {
+//        buffer.Create(static_cast<VkDeviceSize>(sizeof(CamConst)),0,
+//                      VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+//        buffer.Map();
+//    }
+//
+//    camDescSet = Locator::getVknResource()->allocateDescriptorSet();
+//    camDescSet->init(m_pipelineManager->getPipeline("default"),
+//                     swapChain->getImageCount(), 0);
+//    camDescSet->addData(camBuffers.data(), 0);
+//    camDescSet->createDescWritesAndUpdate();
 
     rebuildCommandBuffers();
     createSyncObjects();
@@ -266,12 +331,107 @@ void Element::VknRenderer::rebuildCommandBuffers() {
         const auto& vkCmdBuffer = commandBuffers[i]->GetVkCommandBuffer();
         renderPass->begin(vkCmdBuffer, static_cast<int>(i));
 
+
+        if (!cameras.empty()) {
+            for (const auto& cam :  cameras) {
+
+                VkViewport viewport{};
+                VkRect2D scissorRect{};
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
+                viewport.x = cam->getViewport().x * windowSize.x;
+                viewport.y = cam->getViewport().y * windowSize.y;
+                viewport.width = static_cast<float>(cam->getViewport().z * windowSize.x);
+                viewport.height = static_cast<float>(cam->getViewport().w * windowSize.y);
+
+                scissorRect.offset = {static_cast<int>(cam->getRect().x * windowSize.x),
+                                      static_cast<int>(cam->getRect().y * windowSize.y)};
+                scissorRect.extent = {static_cast<uint32_t>(cam->getRect().z * windowSize.x),
+                                      static_cast<uint32_t>(cam->getRect().w * windowSize.y)};
+                vkCmdSetViewport(vkCmdBuffer, 0, 1, &viewport);
+                vkCmdSetScissor(vkCmdBuffer, 0, 1, &scissorRect);
+
+
+                int j = 0;
+                for (auto &model : vknModels) {
+                    if (!model || model->getEntityState() != EntityState::RENDERED)
+                        continue;
+
+                    m_pipelineManager->BindPipeline(model->GetPipeline(), vkCmdBuffer);
+
+//            vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                                    model->GetPipeline()->GetVkPipelineLayout(), 0, 1,
+//                                    &camDescSet->descriptors.first[i], 0, nullptr);
+
+                    VkDescriptorSet descSets[] =
+                            {cam->descriptorSet->descriptors.first[i],
+                             m_lightManager->descriptorSet->descriptors.first[i],
+                             model->descriptorSet->descriptors.first[i]};
+                    vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                            model->GetPipeline()->GetVkPipelineLayout(), 0,
+                                            static_cast<uint32_t>(model->GetPipeline()->m_descriptorSetLayouts.size()),
+                                            descSets, 0, nullptr);
+
+//            vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                                    model->GetPipeline()->GetVkPipelineLayout(), 1, 2,
+//                                    &model->descriptorSet->descriptors.first[i], 0, nullptr);
+                    BindMesh(model->GetMesh(), vkCmdBuffer);
+                    vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(model->GetMesh()->indices.size()), 1, 0, 0, 0);
+
+                    ++j;
+                }
+                j = 0;
+
+                for (auto &sprite : vknSprites) {
+                    if (!sprite || sprite->getEntityState() != EntityState::RENDERED)
+                        continue;
+
+                    m_pipelineManager->BindPipeline(sprite->GetPipeline(), vkCmdBuffer);
+                    vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                            sprite->GetPipeline()->GetVkPipelineLayout(), 0, 1,
+                                            &sprite->descriptorSet->descriptorSets[i], 0, nullptr);
+                    BindMesh(sprite->GetMesh(), vkCmdBuffer);
+                    vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(sprite->GetMesh()->indices.size()), 1, 0, 0, 0);
+                    ++j;
+                }
+
+                Locator::getResource()->unbindMeshes();
+                m_pipelineManager->UnbindPipelines();
+            }
+
+        }
+        debugRenderer->draw(vkCmdBuffer);
+        renderPass->end(vkCmdBuffer);
+
+        commandBuffers[i]->end();
+    }
+    rebuildCmdBuffers = false;
+
+    //Debugger::Get().endTimer("commandBuffers");
+}
+
+
+void Element::VknRenderer::rebuildCommandBuffersTemp() {
+
+    vkDeviceWaitIdle(Device::getVkDevice());
+    //Debugger::Get().startTimer("commandBuffers");
+    const auto& windowSize = window->getSize();
+    debugRenderer->update(windowSize.x, windowSize.y);
+
+    for (size_t i = 0; i < commandBuffers.size(); i++) {
+
+        commandBuffers[i]->begin(VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+
+        const auto& vkCmdBuffer = commandBuffers[i]->GetVkCommandBuffer();
+        renderPass->begin(vkCmdBuffer, static_cast<int>(i));
+
         VkViewport viewport{};
         VkRect2D scissorRect{};
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         if (!camera)
         {
+
             viewport.x = 0.0f;
             viewport.y = 0.0f;
             viewport.width = static_cast<float>(windowSize.x);
@@ -282,15 +442,15 @@ void Element::VknRenderer::rebuildCommandBuffers() {
         }
         else
         {
-            viewport.x = camera->getViewport().x * windowSize.x;
-            viewport.y = camera->getViewport().y * windowSize.y;
-            viewport.width = static_cast<float>(camera->getViewport().z * windowSize.x);
-            viewport.height = static_cast<float>(camera->getViewport().w * windowSize.y);
+            viewport.x = cameras[0]->getViewport().x * windowSize.x;
+            viewport.y = cameras[0]->getViewport().y * windowSize.y;
+            viewport.width = static_cast<float>(cameras[0]->getViewport().z * windowSize.x);
+            viewport.height = static_cast<float>(cameras[0]->getViewport().w * windowSize.y);
 
-            scissorRect.offset = { static_cast<int>(camera->getRect().x * windowSize.x),
-                                   static_cast<int>(camera->getRect().y * windowSize.y) };
-            scissorRect.extent = { static_cast<uint32_t>(camera->getRect().z * windowSize.x),
-                                   static_cast<uint32_t>(camera->getRect().w * windowSize.y) };
+            scissorRect.offset = { static_cast<int>(cameras[0]->getRect().x * windowSize.x),
+                                   static_cast<int>(cameras[0]->getRect().y * windowSize.y) };
+            scissorRect.extent = { static_cast<uint32_t>(cameras[0]->getRect().z * windowSize.x),
+                                   static_cast<uint32_t>(cameras[0]->getRect().w * windowSize.y) };
         }
 
         vkCmdSetViewport(vkCmdBuffer, 0, 1, &viewport);
@@ -303,9 +463,23 @@ void Element::VknRenderer::rebuildCommandBuffers() {
                 continue;
 
             m_pipelineManager->BindPipeline(model->GetPipeline(), vkCmdBuffer);
+
+//            vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                                    model->GetPipeline()->GetVkPipelineLayout(), 0, 1,
+//                                    &camDescSet->descriptors.first[i], 0, nullptr);
+
+            VkDescriptorSet descSets[] =
+                    {cameras[0]->descriptorSet->descriptors.first[i],
+                     m_lightManager->descriptorSet->descriptors.first[i],
+                     model->descriptorSet->descriptors.first[i]};
             vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                    model->GetPipeline()->GetVkPipelineLayout(), 0, 1,
-                                    &model->descriptorSet->descriptors.first[i], 0, nullptr);
+                                    model->GetPipeline()->GetVkPipelineLayout(), 0,
+                                    static_cast<uint32_t>(model->GetPipeline()->m_descriptorSetLayouts.size()),
+                                    descSets, 0, nullptr);
+
+//            vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                                    model->GetPipeline()->GetVkPipelineLayout(), 1, 2,
+//                                    &model->descriptorSet->descriptors.first[i], 0, nullptr);
             BindMesh(model->GetMesh(), vkCmdBuffer);
             vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(model->GetMesh()->indices.size()), 1, 0, 0, 0);
 
@@ -411,10 +585,8 @@ void Element::VknRenderer::CheckSprites()
 void Element::VknRenderer::updateUniformBuffers()
 {
     UniformBufferObject ubo{};
-    ubo.view = camera->getViewMatrix();
-    ubo.proj = camera->getProjMatrix();
-    ubo.viewPos = Utilities::vec3RefToGlmvec3(camera->getPos());
-    ubo.viewPos.y *= -1;
+//    ubo.view = camera->getViewMatrix();
+//    ubo.proj = camera->getProjMatrix();
     //Debugger::Get().startTimer("uniformBuffers");
     for (auto& model : vknModels)
     {
@@ -472,12 +644,12 @@ Element::Model* Element::VknRenderer::createModel()
 //    model->descriptorSet->init(model->GetPipeline(), swapChain->getImageCount());
 //
      //std::vector<void*>data{model->GetUniformBuffers().data(), model->GetTexture()};
-
-    model->descriptorSet->addData(model->GetUniformBuffers().data());
-    model->descriptorSet->addData(model->GetTexture());
-    model->descriptorSet->addData(Locator::getResource()->material("test")->uniformBuffers.data());
-    model->descriptorSet->addData(m_lightManager->getLightBuffers().data());
-    model->descriptorSet->addData(m_lightManager->getLightConstantsBuffers().data());
+    model->descriptorSet->addData(model->GetUniformBuffers().data(), 0);
+    model->descriptorSet->addData(model->GetTexture(), 1);
+//    model->descriptorSet->addData(m_lightManager->getLightBuffers().data(), 3);
+//    model->descriptorSet->addData(m_lightManager->getLightConstantsBuffers().data(), 4);
+    model->descriptorSet->addData(
+            Locator::getResource()->material("test")->uniformBuffers.data(), 2);
     model->descriptorSet->createDescWritesAndUpdate();
 //    model->descriptorSet->createDescWritesAndUpdate(model->GetUniformBuffers(), model->GetTexture());
     return dynamic_cast<Model*>(model.get());
@@ -494,7 +666,8 @@ Element::Sprite* Element::VknRenderer::createNewSprite()
 
 Element::Camera* Element::VknRenderer::createCamera(Element::CameraType type)
 {
-    return dynamic_cast<Camera*>(new EleCamera(type));
+    auto cam = new EleCamera(type);
+    return dynamic_cast<Camera*>(cam);
 }
 
 void Element::VknRenderer::setClearColour(const Vec3& clearCol)

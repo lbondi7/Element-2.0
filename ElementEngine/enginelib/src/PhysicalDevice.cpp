@@ -34,15 +34,10 @@ Element::PhysicalDevice::PhysicalDevice(VkInstance instance, VkSurfaceKHR surfac
     int bestScore = 0;
     for (const auto& device : m_physicalDevices) {
         if (bestScore < device.score) {
-            m_selectedPhysicalDevice.score = device.score;
-            m_selectedPhysicalDevice.m_physicalDevice = device.m_physicalDevice;
-            m_selectedPhysicalDevice.id = device.id;
-            m_selectedPhysicalDevice.msaaSamples = device.msaaSamples;
-            m_selectedPhysicalDevice.requiredExtensions = device.requiredExtensions;
+            m_selectedPhysicalDevice = device;
             bestScore = device.score;
         }
     }
-    //int mssa = static_cast<int>(GameSettings::Instance().msaaLevel);
     vkGetPhysicalDeviceFeatures(m_selectedPhysicalDevice.m_physicalDevice, &m_selectedPhysicalDevice.m_supportedFeatures);
     vkGetPhysicalDeviceProperties(m_selectedPhysicalDevice.m_physicalDevice, &m_selectedPhysicalDevice.m_properties);
     vkGetPhysicalDeviceMemoryProperties(m_selectedPhysicalDevice.m_physicalDevice, &m_selectedPhysicalDevice.m_memoryProperties);
@@ -104,50 +99,6 @@ VkSampleCountFlagBits Element::PhysicalDevice::getMaxUsableSampleCount(Element::
 
 }
 
-void Element::PhysicalDevice::PickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
-{
-    uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-
-    if (deviceCount == 0) {
-        throw std::runtime_error("failed to find GPUs with Vulkan support!");
-    }
-
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-
-    for (const auto& device : devices) {
-        if (isDeviceSuitable(device, surface)) {
-            m_selectedPhysicalDevice.m_physicalDevice = device;
-            break;
-        }
-    }
-
-    if (m_selectedPhysicalDevice.m_physicalDevice == VK_NULL_HANDLE) {
-        throw std::runtime_error("failed to find a suitable GPU!");
-    }
-}
-
-
-bool Element::PhysicalDevice::isDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
-    QueueIndices indices = Element::VkFunctions::findQueueFamilies(physicalDevice, surface, QueueIndices::QueueType::GRAPHICS_COMPUTE);
-
-    bool extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
-
-    bool swapChainAdequate = false;
-    if (extensionsSupported) {
-        SwapChainSupportDetails swapChainSupport = Element::VkFunctions::querySwapChainSupport(physicalDevice, surface);
-        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-    }
-
-    VkPhysicalDeviceFeatures supportedFeatures;
-    vkGetPhysicalDeviceFeatures(physicalDevice, &supportedFeatures);
-    VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-    
-    return indices.canRenderandCompute() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
-}
-
 void Element::PhysicalDevice::GetDeviceScore(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, Element::PhysicalDevice::PhysicalDeviceData& deviceData) {
     QueueIndices indices = Element::VkFunctions::findQueueFamilies(physicalDevice, surface);
 
@@ -156,11 +107,10 @@ void Element::PhysicalDevice::GetDeviceScore(VkPhysicalDevice physicalDevice, Vk
     if (deviceData.score == 0){
         return;
     }
-    //bool extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
 
     bool swapChainAdequate = false;
-    SwapChainSupportDetails swapChainSupport = Element::VkFunctions::querySwapChainSupport(physicalDevice, surface);
-    swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+    deviceData.swapChainSupport = querySwapChainSupport(physicalDevice, surface);
+    swapChainAdequate = !deviceData.swapChainSupport.formats.empty() && !deviceData.swapChainSupport.presentModes.empty();
 
 
     vkGetPhysicalDeviceFeatures(physicalDevice, &deviceData.m_supportedFeatures);
@@ -174,7 +124,14 @@ void Element::PhysicalDevice::GetDeviceScore(VkPhysicalDevice physicalDevice, Vk
         deviceData.score += 5000;
     }
 
-    if (!indices.canRender() || !swapChainAdequate ||  !deviceData.m_supportedFeatures.samplerAnisotropy) {
+    bool supportsFormat = findSupportedFormat(physicalDevice, deviceData.requiredFormats["depth"],
+                                              { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT,
+                                                 VK_FORMAT_D24_UNORM_S8_UINT },
+                                              VK_IMAGE_TILING_OPTIMAL,
+                                              VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+    if (!indices.canRender() || !swapChainAdequate ||  !deviceData.m_supportedFeatures.samplerAnisotropy ||
+    !supportsFormat) {
         deviceData.score = 0;
         return;
     }
@@ -225,32 +182,47 @@ bool Element::PhysicalDevice::checkDeviceExtensionSupport(VkPhysicalDevice devic
     return requiredExtensions.empty();
 }
 
-//void Element::PhysicalDevice::findQueueFamilies(VkSurfaceKHR surface) {
-//
-//
-//    uint32_t queueFamilyCount = 0;
-//    vkGetPhysicalDeviceQueueFamilyProperties(m_selectedPhysicalDevice.m_physicalDevice, &queueFamilyCount, nullptr);
-//
-//    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-//    vkGetPhysicalDeviceQueueFamilyProperties(m_selectedPhysicalDevice.m_physicalDevice, &queueFamilyCount, queueFamilies.data());
-//
-//    int i = 0;
-//    for (const auto& queueFamily : queueFamilies) {
-//        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-//            queueFamilyIndices.graphics = i;
-//        }
-//
-//        VkBool32 presentSupport = false;
-//        vkGetPhysicalDeviceSurfaceSupportKHR(m_selectedPhysicalDevice.m_physicalDevice, i, surface, &presentSupport);
-//
-//        if (presentSupport) {
-//            queueFamilyIndices.present = i;
-//        }
-//
-//        if (queueFamilyIndices.graphics.has_value() && queueFamilyIndices.present.has_value()) {
-//            return;
-//        }
-//
-//        i++;
-//    }
-//}
+bool Element::PhysicalDevice::findSupportedFormat(VkPhysicalDevice physicalDevice, VkFormat& requiredFormat, const
+std::vector<VkFormat>&
+        candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
+    for (VkFormat format : candidates) {
+        VkFormatProperties props;
+        vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
+
+        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+            requiredFormat = format;
+            return true;
+        }
+        else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+            requiredFormat = format;
+            return true;
+        }
+    }
+
+    return false;
+//    throw std::runtime_error("failed to find supported format!");
+}
+
+SwapChainSupportDetails Element::PhysicalDevice::querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) {
+    SwapChainSupportDetails details;
+
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+    uint32_t formatCount;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
+
+    if (formatCount != 0) {
+        details.formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
+    }
+
+    uint32_t presentModeCount;
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
+
+    if (presentModeCount != 0) {
+        details.presentModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
+    }
+
+    return details;
+}

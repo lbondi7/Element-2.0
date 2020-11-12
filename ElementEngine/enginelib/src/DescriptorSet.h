@@ -3,6 +3,7 @@
 #include "VknConstants.h"
 #include "Buffer.h"
 #include "Texture.h"
+#include "ShaderInfo.h"
 
 namespace Element{
 
@@ -17,7 +18,9 @@ namespace Element{
 
 		void init(VknPipeline* _pipeline, uint32_t imageCount);
 
-        void init(VknPipeline *_pipeline, uint32_t imageCount, int d);
+        void init(VknPipeline *_pipeline, uint32_t imageCount, int id);
+
+        void init(VknPipeline *_pipeline, uint32_t imageCount, float h, float y);
 
 		void createDescWriteAndUpdate(std::vector<void*>& data);
 
@@ -35,7 +38,7 @@ namespace Element{
 
 		void replaceData(void* _data, int placement);
 
-		//void updateDescriptorSet(void* _data, uint32_t binding = -1);
+        void createDescWritesAndUpdate(Element::Descriptor _descriptor);
 
         void updateBufferInfo(const VkDescriptorBufferInfo *bufferInfo, uint32_t binding = 1);
 
@@ -50,7 +53,7 @@ namespace Element{
 	private:
 		uint32_t count;
 		VknPipeline* pipeline;
-
+        int id;
 		bool created = false;
 
         void writeDescriptor(VkWriteDescriptorSet &writeDescriptorSet, VkDescriptorSet descriptor,

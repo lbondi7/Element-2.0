@@ -23,7 +23,6 @@ namespace Element {
 		void Destroy();
 
 		VkRenderPass GetVkRenderPass();
-		VkFormat findDepthFormat();
 
 		void begin(VkCommandBuffer vkCommandBuffer, int i);
 		void end(VkCommandBuffer vkCommandBuffer);

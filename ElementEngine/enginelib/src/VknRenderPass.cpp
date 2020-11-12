@@ -35,33 +35,42 @@ void Element::RenderPass::init(SwapChain* swapChain)
 
 void Element::RenderPass::createVkRenderPass() {
 
-    const auto& samples = Device::GetPhysicalDevice()->GetSelectedDevice().msaaSamples;
+    const auto& physicalDevice = Device::GetPhysicalDevice()->GetSelectedDevice();
 
-    bool isMSAAx1 = samples & VK_SAMPLE_COUNT_1_BIT;
+    bool isMSAAx1 = physicalDevice.msaaSamples & VK_SAMPLE_COUNT_1_BIT;
     bool depthEnabled = GameSettings::get().depthEnabled;
 
-    VkAttachmentDescription colorAttachment = Element::VkInitializers::attachmentDescription(m_swapChain->ImageFormat(), samples, isMSAAx1 ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
+    VkAttachmentDescription colorAttachment = Element::VkInitializers::attachmentDescription(
+            m_swapChain->ImageFormat(),
+            physicalDevice.msaaSamples, isMSAAx1 ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         VK_IMAGE_LAYOUT_UNDEFINED, 
         VK_ATTACHMENT_LOAD_OP_CLEAR, 
         VK_ATTACHMENT_STORE_OP_STORE, 
         VK_ATTACHMENT_LOAD_OP_DONT_CARE, 
         VK_ATTACHMENT_STORE_OP_DONT_CARE);
-    VkAttachmentDescription depthAttachment = Element::VkInitializers::attachmentDescription(findDepthFormat(), samples, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 
+    VkAttachmentDescription depthAttachment = Element::VkInitializers::attachmentDescription(
+            physicalDevice.requiredFormats.at("depth"),
+            physicalDevice.msaaSamples, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
         VK_IMAGE_LAYOUT_UNDEFINED, 
         VK_ATTACHMENT_LOAD_OP_CLEAR, 
         VK_ATTACHMENT_STORE_OP_DONT_CARE, 
         VK_ATTACHMENT_LOAD_OP_DONT_CARE, 
         VK_ATTACHMENT_STORE_OP_DONT_CARE);
-    VkAttachmentDescription colorAttachmentResolve = Element::VkInitializers::attachmentDescription(m_swapChain->ImageFormat(), VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
+    VkAttachmentDescription colorAttachmentResolve = Element::VkInitializers::attachmentDescription(
+            m_swapChain->ImageFormat(),
+            VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
         VK_IMAGE_LAYOUT_UNDEFINED, 
         VK_ATTACHMENT_LOAD_OP_DONT_CARE, 
         VK_ATTACHMENT_STORE_OP_STORE, 
         VK_ATTACHMENT_LOAD_OP_DONT_CARE, 
         VK_ATTACHMENT_STORE_OP_DONT_CARE);
 
-    VkAttachmentReference colorAttachmentRef = Element::VkInitializers::attachmentReference(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    VkAttachmentReference depthAttachmentRef = Element::VkInitializers::attachmentReference(1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-    VkAttachmentReference colorAttachmentResolveRef = Element::VkInitializers::attachmentReference(depthEnabled ? 2 : 1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    VkAttachmentReference colorAttachmentRef =Element::VkInitializers::attachmentReference(
+            0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    VkAttachmentReference depthAttachmentRef = Element::VkInitializers::attachmentReference(
+            1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    VkAttachmentReference colorAttachmentResolveRef = Element::VkInitializers::attachmentReference(
+            depthEnabled ? 2 : 1, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
     VkSubpassDescription subpass{};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -122,14 +131,6 @@ void Element::RenderPass::Destroy()
 VkRenderPass Element::RenderPass::GetVkRenderPass()
 {
     return m_vkRenderPass;
-}
-
-VkFormat Element::RenderPass::findDepthFormat() {
-    return Element::VkFunctions::findSupportedFormat(Device::GetVkPhysicalDevice(),
-        { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-        VK_IMAGE_TILING_OPTIMAL,
-        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-    );
 }
 
 void Element::RenderPass::begin(VkCommandBuffer vkCommandBuffer, int i)

@@ -116,8 +116,8 @@ void Element::VknModel::updateUniformBuffers(bool cameraChanged, const glm::mat4
 	ubo.model = glm::translate(ubo.model, pos);
 	ubo.model *= glm::yawPitchRoll(transform.getRotation().y, transform.getRotation().x, transform.getRotation().z);
 	ubo.model = glm::scale(ubo.model, Utilities::vec3RefToGlmvec3(transform.getScale()));
-	ubo.view = viewMatrix;
-	ubo.proj = projMatrix;
+//	ubo.view = viewMatrix;
+//	ubo.proj = projMatrix;
 
 	uniformBuffers[imageIndex].CopyMemory(&ubo, sizeof(ubo));
 }
@@ -175,7 +175,7 @@ void Element::VknModel::init(VknPipeline* _pipeline, uint32_t imageCount)
 	}
 	//descriptorSet = std::make_unique<DescriptorSet>();
 	descriptorSet = Locator::getVknResource()->allocateDescriptorSet();
-	descriptorSet->init(pipeline, imageCount, 0);
+	descriptorSet->init(pipeline, imageCount, 2);
 	SetTexture(Locator::getResource()->texture("default"));
 }
 
@@ -184,7 +184,8 @@ void Element::VknModel::reInit(uint32_t imageCount)
 	entityState = EntityState::NOT_RENDERED;
 	prevEntityState = EntityState::NOT_RENDERED;
 	//descriptorSet = std::make_unique<DescriptorSet>();
-	descriptorSet->init(pipeline, imageCount, 0);
+	descriptorSet->flush();
+	descriptorSet->init(pipeline, imageCount, 2);
     //std::vector<void*>data{uniformBuffers.data(), texture};
 	descriptorSet->createDescWritesAndUpdate();
 	dirty = DirtyFlags::DIRTY;

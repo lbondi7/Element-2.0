@@ -112,5 +112,22 @@ namespace Element {
 		std::unique_ptr<LightManager> m_lightManager;
 
 		EleCamera* camera;
+
+		std::vector<std::unique_ptr<EleCamera>> cameras;
+
+//		std::vector<Buffer> camBuffers;
+//
+//		DescriptorSet* camDescSet;
+
+		int type = 0;
+		float pos[3] = {0, 0, 0};
+        float col[3] = {1, 1, 1};
+        float dir[3] = {1, 1, 1};
+        float attenuation[3] = {1.0f, 0.09f, 0.032};
+        float intensity = 1.0f;
+        float cutOff = 12.5;
+        float outerCutOff = 15.0f;
+
+        void rebuildCommandBuffersTemp();
     };
 }

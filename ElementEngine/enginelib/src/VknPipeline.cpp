@@ -14,12 +14,27 @@
 Element::VknPipeline::VknPipeline(SwapChain* swapChain, RenderPass* renderPass, const std::string& name, const PipelineData& pipelineInfo) :
 m_swapChain(swapChain), m_renderPass(renderPass), name(name), m_pipelineData(pipelineInfo)
 {
+    ShaderInfo shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
+                             "defaultLighting", 0, 0};
+    m_pipelineData.shaderInfo.emplace(m_pipelineData.shaderInfo.cbegin(), shaderInfo);
+    shaderInfo = {BindObjectType::STATIC_STORAGE_BUFFER, ShaderType::FRAGMENT,
+                  "defaultLighting", 1, 0 };
+    m_pipelineData.shaderInfo.emplace(m_pipelineData.shaderInfo.cbegin(), shaderInfo);
+    shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
+                  "defaultLighting", 1, 1 };
+    m_pipelineData.shaderInfo.emplace(m_pipelineData.shaderInfo.cbegin(), shaderInfo);
+
+    int numberOfSets = 0;
+
     for (const auto& shaderInfo : m_pipelineData.shaderInfo) {
-        bindingsData.emplace_back(
-                Element::VkInitializers::descriptorSetLayoutBinding(
-                        Shader::GetVkShaderStageFlag(shaderInfo.shaderType),
-                        Element::VkFunctions::getDescriptorType(shaderInfo.bindObjectType),
-                        shaderInfo.binding));
+//        bindingsData.emplace_back(
+//                VkInitializers::descriptorSetLayoutBinding(
+//                        Shader::GetVkShaderStageFlag(shaderInfo.shaderType),
+//                        VkFunctions::getDescriptorType(shaderInfo.bindObjectType),
+//                        shaderInfo.binding));
+
+        if(shaderInfo.set > numberOfSets)
+            numberOfSets = shaderInfo.set;
 
         auto shader = Locator::getResource()->shader(shaderInfo.shader, shaderInfo.shaderType);
         bool loaded = false;
@@ -28,9 +43,11 @@ m_swapChain(swapChain), m_renderPass(renderPass), name(name), m_pipelineData(pip
                     loaded = true;
         }
         if(!loaded)
-            shaderStages.emplace_back(Element::VkInitializers::pipelineShaderStageCreateInfo(
+            shaderStages.emplace_back(VkInitializers::pipelineShaderStageCreateInfo(
                             shader->GetVkShaderModule(), shader->GetVkShaderStageFlag()));
     }
+
+    m_descriptorSetLayouts.resize(numberOfSets + 1);
 
     init();
 }
@@ -44,7 +61,7 @@ Element::VknPipeline::~VknPipeline()
 void Element::VknPipeline::init() {
 
     createDescriptorSetLayout();
-    createPipelineLayout();
+    createPipelineLayoutTemp();
     createVknPipeline();
     createDescriptorPool();
 }
@@ -95,7 +112,33 @@ void Element::VknPipeline::createPipelineLayout() {
 
     auto logicalDevice = Device::getVkDevice();
 
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo = Element::VkInitializers::pipelineLayoutCreateInfo(&m_descriptorSetLayout);
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = VkInitializers::pipelineLayoutCreateInfo(&m_descriptorSetLayout);
+
+    if (vkCreatePipelineLayout(logicalDevice, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create pipeline layout!");
+    }
+}
+
+void Element::VknPipeline::createPipelineLayoutTemp() {
+
+    auto logicalDevice = Device::getVkDevice();
+
+//    VkDescriptorSetLayoutBinding binding{};
+//    binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+//    binding.binding = 0;
+//    binding.descriptorCount = 1;
+//    binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+//    VkDescriptorSetLayoutCreateInfo layoutInfo =
+//            VkInitializers::descriptorSetLayoutCreateInfo(&binding, 1);
+//
+//    if (vkCreateDescriptorSetLayout(Device::getVkDevice(), &layoutInfo, nullptr, &m_viewDescSetLayout) != VK_SUCCESS) {
+//        throw std::runtime_error("failed to create descriptor set layout!");
+//    }
+
+//   std::array<VkDescriptorSetLayout, 2> descLayouts {m_viewDescSetLayout, m_descriptorSetLayout};
+
+    VkPipelineLayoutCreateInfo pipelineLayoutInfo = VkInitializers::pipelineLayoutCreateInfo(
+            m_descriptorSetLayouts.data(), m_descriptorSetLayouts.size());
 
     if (vkCreatePipelineLayout(logicalDevice, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
@@ -104,12 +147,32 @@ void Element::VknPipeline::createPipelineLayout() {
 
 void Element::VknPipeline::createDescriptorSetLayout() {
 
-    VkDescriptorSetLayoutCreateInfo layoutInfo =
-            Element::VkInitializers::descriptorSetLayoutCreateInfo(bindingsData.data(), static_cast<uint32_t>(bindingsData.size()));
+    for (int i = 0; i < m_descriptorSetLayouts.size(); ++i) {
+        std::vector<VkDescriptorSetLayoutBinding> bind;
+        for (const auto& shaderInfo : m_pipelineData.shaderInfo) {
 
-    if (vkCreateDescriptorSetLayout(Device::getVkDevice(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor set layout!");
+            if (shaderInfo.set == i) {
+                bind.emplace_back(VkInitializers::descriptorSetLayoutBinding(
+                        Shader::GetVkShaderStageFlag(shaderInfo.shaderType),
+                        VkFunctions::getDescriptorType(shaderInfo.bindObjectType),
+                        shaderInfo.binding));
+            }
+        }
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo =
+                VkInitializers::descriptorSetLayoutCreateInfo(bind.data(), static_cast<uint32_t>(bind.size()));
+
+        if (vkCreateDescriptorSetLayout(Device::getVkDevice(), &layoutInfo,
+                                        nullptr,&m_descriptorSetLayouts[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
     }
+//    VkDescriptorSetLayoutCreateInfo layoutInfo =
+//            VkInitializers::descriptorSetLayoutCreateInfo(bindingsData.data(), static_cast<uint32_t>(bindingsData.size()));
+//
+//    if (vkCreateDescriptorSetLayout(Device::getVkDevice(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
+//        throw std::runtime_error("failed to create descriptor set layout!");
+//    }
 }
 
 void Element::VknPipeline::createDescriptorPool() {
@@ -153,7 +216,8 @@ void Element::VknPipeline::createVknPipeline() {
 
     bool depthEnabled = m_pipelineData.depthEnabled;
 
-    VkPipelineVertexInputStateCreateInfo vertexInputInfo = Element::VkInitializers::pipelineVertexInputCreateInfo(1);
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo = VkInitializers::pipelineVertexInputCreateInfo(
+            1);
 
     auto bindingDescription = Vertex::getBindingDescription();
     auto attributeDescriptions = Vertex::getAttributeDescriptions();
@@ -163,11 +227,16 @@ void Element::VknPipeline::createVknPipeline() {
     vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly = VkInitializers::pipelineInputAssemblyCreateInfo();
-    VkPipelineViewportStateCreateInfo viewportState = VkInitializers::pipelineViewportCreateInfo(nullptr, 1, nullptr, 1);
-    VkPipelineRasterizationStateCreateInfo rasterizer = VkInitializers::pipelineRasterizerCreateInfo(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_POLYGON_MODE_FILL, depthEnabled ? VK_FALSE : VK_TRUE);
-    VkPipelineMultisampleStateCreateInfo multisampling = VkInitializers::pipelineMultisamplerCreateInfo(physicalDevice.msaaSamples, VK_FALSE);
-    VkPipelineDepthStencilStateCreateInfo depthStencil = VkInitializers::pipelineDepthStencilCreateInfo(VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, VK_FALSE, VK_FALSE);
-    VkPipelineColorBlendAttachmentState colorBlendAttachment = VkInitializers::pipelineColourBlendAttachment(VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+    VkPipelineViewportStateCreateInfo viewportState = VkInitializers::pipelineViewportCreateInfo(
+            nullptr, 1, nullptr,1);
+    VkPipelineRasterizationStateCreateInfo rasterizer = VkInitializers::pipelineRasterizerCreateInfo(
+            VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_POLYGON_MODE_FILL, depthEnabled ? VK_FALSE : VK_TRUE);
+    VkPipelineMultisampleStateCreateInfo multisampling = VkInitializers::pipelineMultisamplerCreateInfo(
+            physicalDevice.msaaSamples, VK_FALSE);
+    VkPipelineDepthStencilStateCreateInfo depthStencil =VkInitializers::pipelineDepthStencilCreateInfo(
+            VK_TRUE, VK_TRUE, VK_COMPARE_OP_LESS, VK_FALSE, VK_FALSE);
+    VkPipelineColorBlendAttachmentState colorBlendAttachment = VkInitializers::pipelineColourBlendAttachment(
+            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
     VkPipelineColorBlendStateCreateInfo colorBlending = VkInitializers::pipelineColourBlendCreateInfo
             (&colorBlendAttachment, 1, VK_FALSE, VK_LOGIC_OP_COPY);
     std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };

@@ -97,8 +97,8 @@ void Element::VknSprite::updateUniformBuffers(bool cameraChanged, const glm::mat
 	ubo.model = glm::translate(ubo.model, pos + scalar);
 	ubo.model = glm::scale(ubo.model, scalar);
 	ubo.model = glm::rotate(ubo.model, glm::radians(transform.getRotationZ()), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.view = viewMatrix;
-	ubo.proj = projMatrix;
+//	ubo.view = viewMatrix;
+//	ubo.proj = projMatrix;
 
 	uniformBuffers[imageIndex].CopyMemory(&ubo, sizeof(ubo));
 }

@@ -33,6 +33,7 @@ namespace Element {
 		VkBufferUsageFlags m_usage;
 		VkMemoryPropertyFlags m_properties;
 		VkDescriptorBufferInfo m_descriptorInfo;
+        VkDescriptorType descriptorType;
 		void* mapped = nullptr;
 		bool isMapped = false;
 

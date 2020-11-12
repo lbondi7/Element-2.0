@@ -11,6 +11,8 @@
 #include <array>
 #include <optional>
 
+#include <element/Maths/Vec3.h>
+
 
 struct QueueIndices {
 
@@ -90,10 +92,16 @@ struct Vertex {
 
 struct UniformBufferObject {
     alignas(16) glm::mat4 model = glm::mat4(1.0f);
-    alignas(16) glm::mat4 view = glm::mat4(1.0f);
-    alignas(16) glm::mat4 proj = glm::mat4(1.0f);
-    alignas(16) glm::vec3 viewPos = glm::vec3(0.0f);
+//    alignas(16) glm::mat4 view = glm::mat4(1.0f);
+//    alignas(16) glm::mat4 proj = glm::mat4(1.0f);
 };
+
+//struct ViewBufferObject {
+//    alignas(16) glm::mat4 view[2] = {glm::mat4(1.0f), glm::mat4(1.0f)};
+//    alignas(16) glm::mat4 proj[2] = {glm::mat4(1.0f), glm::mat4(1.0f)};
+//    alignas(16) Vec3 cameraPos[2] = {Vec3(0.0f), Vec3(0.0f)};
+//    //Vec3 padding = Vec3(0.0f);
+//};
 
 
 enum class DirtyFlags : int {

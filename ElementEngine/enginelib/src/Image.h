@@ -13,8 +13,6 @@ namespace Element {
 
 		void Destroy();
 
-		void CopyFromBuffer(VkCommandPool commandPool, VkQueue queue, VkBuffer buffer, uint32_t width, uint32_t height);
-
 		void CopyFromBuffer(VkBuffer buffer, uint32_t width, uint32_t height);
 
 		void transitionLayout(VkFormat format, uint32_t mipLevels, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage);

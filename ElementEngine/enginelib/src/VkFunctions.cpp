@@ -36,72 +36,6 @@ uint32_t Element::VkFunctions::GetMemoryType(const VkPhysicalDeviceMemoryPropert
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-//bool Element::VkFunctions::checkDeviceExtensionSupport(VkPhysicalDevice device) {
-//    uint32_t extensionCount;
-//    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
-//
-//    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-//    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-//
-//    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-//
-//    for (const auto& extension : availableExtensions) {
-//        requiredExtensions.erase(extension.extensionName);
-//    }
-//
-//    return requiredExtensions.empty();
-//}
-
-VkFormat Element::VkFunctions::findSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
-    for (VkFormat format : candidates) {
-        VkFormatProperties props;
-        vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
-
-        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
-            return format;
-        }
-        else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
-            return format;
-        }
-    }
-
-    throw std::runtime_error("failed to find supported format!");
-}
-
-VkCommandBuffer Element::VkFunctions::beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool) {
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = commandPool;
-    allocInfo.commandBufferCount = 1;
-
-    VkCommandBuffer commandBuffer;
-    vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-    return commandBuffer;
-}
-
-
-void Element::VkFunctions::endSingleTimeCommands(VkDevice device, VkCommandBuffer commandBuffer, VkCommandPool commandPool, VkQueue queue) {
-    vkEndCommandBuffer(commandBuffer);
-
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-
-    vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(queue);
-
-    vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
-}
-
 QueueIndices Element::VkFunctions::findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
     QueueIndices indices;
 
@@ -206,30 +140,6 @@ VkPresentModeKHR Element::VkFunctions::chooseSwapPresentMode(const std::vector<V
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-SwapChainSupportDetails Element::VkFunctions::querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) {
-    SwapChainSupportDetails details;
-
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
-
-    uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
-
-    if (formatCount != 0) {
-        details.formats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
-    }
-
-    uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
-
-    if (presentModeCount != 0) {
-        details.presentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
-    }
-
-    return details;
-}
-
 VkImageView Element::VkFunctions::createImageView(VkDevice device, VkImage image, uint32_t mipLevels, VkFormat format, VkImageAspectFlags aspectFlags) {
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -286,3 +196,15 @@ std::vector<char> Element::VkFunctions::readFile(const std::string& filename) {
 
     return buffer;
 }
+
+VkDescriptorType Element::VkFunctions::getDescriptorTypeFromUsage(VkBufferUsageFlags bufferUsage) {
+
+//    switch (bufferUsage) {
+//        case :
+//    }
+
+
+
+    return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+}
+

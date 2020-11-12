@@ -3,6 +3,7 @@
 #include "Locator.h"
 #include "Resources.h"
 #include "VknPipeline.h"
+#include "VkFunctions.h"
 #include <element/Debugger.h>
 
 #include <stdexcept>
@@ -37,13 +38,14 @@ void Element::DescriptorSet::init(VknPipeline* _pipeline, uint32_t imageCount)
     }
 }
 
-void Element::DescriptorSet::init(VknPipeline* _pipeline, uint32_t imageCount, int d)
+void Element::DescriptorSet::init(VknPipeline* _pipeline, uint32_t imageCount, int _id)
 {
     const auto& logicalDevice = Device::getVkDevice();
     vkDeviceWaitIdle(logicalDevice);
 
     pipeline = _pipeline;
-    std::vector<VkDescriptorSetLayout> layouts(imageCount, pipeline->GetVkDescriptorSetLayout());
+    id = _id;
+    std::vector<VkDescriptorSetLayout> layouts(imageCount, pipeline->m_descriptorSetLayouts[id]);
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorSetCount = count = static_cast<uint32_t>(imageCount);
@@ -58,6 +60,29 @@ void Element::DescriptorSet::init(VknPipeline* _pipeline, uint32_t imageCount, i
         if (vkAllocateDescriptorSets(logicalDevice, &allocInfo, descriptors.first.data()) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
+}
+
+void Element::DescriptorSet::init(VknPipeline* _pipeline, uint32_t imageCount, float h, float y)
+{
+    const auto& logicalDevice = Device::getVkDevice();
+    vkDeviceWaitIdle(logicalDevice);
+
+    pipeline = _pipeline;
+    std::vector<VkDescriptorSetLayout> layouts(imageCount, pipeline->m_viewDescSetLayout);
+    VkDescriptorSetAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorSetCount = count = static_cast<uint32_t>(imageCount);
+    allocInfo.descriptorPool = pipeline->allocateDescriptorPool(count);
+    allocInfo.pSetLayouts = layouts.data();
+
+    //descriptors.resize(imageCount);
+    descriptors.first.reserve(imageCount);
+    descriptors.first.resize(imageCount);
+    descriptors.second.reserve(imageCount);
+    descriptors.second.resize(imageCount);
+    if (vkAllocateDescriptorSets(logicalDevice, &allocInfo, descriptors.first.data()) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate descriptor sets!");
+    }
 }
 
 void Element::DescriptorSet::createDescWriteAndUpdate(std::vector<void*>& data)
@@ -134,55 +159,44 @@ void Element::DescriptorSet::createDescWritesAndUpdate()
 
         auto& descriptorWrites = descriptors.second[i];
         int j = 0;
-        for (const auto& binding : pipeline->bindingsData)
+        for (const auto& binding : pipeline->GetPipelineData().shaderInfo)
         {
-            auto d = data[binding.binding];
-            switch (binding.descriptorType)
+            if(id != binding.set)
+                continue;
+
+            auto d = data_map[binding.binding];
+            auto desType = VkFunctions::getDescriptorType(binding.bindObjectType);
+            switch (desType)
             {
-                case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER: {
-
-                    auto buffer = reinterpret_cast<Buffer*>(d);
-                    //Debugger::get().log(static_cast<float>(buffer[0].m_size));
-                    if(binding.binding >= descriptorWrites.size())
-                        descriptors.second[i].emplace_back();
-
-                    buffer[i].binding = binding.binding;
-                    writeDescriptor(descriptorWrites[binding.binding], descriptor,
-                                    &buffer[i].m_descriptorInfo, binding.descriptorType, binding.binding);
-                    break;
-                }
+                case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
                 case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC: {
 
-                    break;
+                    auto buffer = static_cast<Buffer*>(d);
+                    if(buffer) {
+                        //Debugger::get().log(static_cast<float>(buffer[0].m_size));
+                        descriptorWrites.emplace_back();
+
+                        buffer[i].binding = binding.binding;
+                        writeDescriptor(descriptorWrites[j], descriptor,
+                                        &buffer[i].m_descriptorInfo, desType, binding.binding);
+                        break;
+                    }
                 }
                 case VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: {
 
-                    const auto& texture =
-                            d ? reinterpret_cast<Texture*>(d) : Locator::getResource()->texture("default");
+                    const auto& texture = static_cast<Texture*>(d);
+                    if(texture) {
+//                        if(binding.binding >= descriptorWrites.size())
+                            descriptorWrites.emplace_back();
 
-                    if(binding.binding >= descriptorWrites.size())
-                        descriptorWrites.emplace_back();
+                        texture->m_image.binding = binding.binding;
+                        writeDescriptor(descriptorWrites[j], descriptor,
+                                        &texture->m_image.m_descriptorInfo, desType, binding.binding);
 
-                    texture->m_image.binding = binding.binding;
-                    writeDescriptor(descriptorWrites[binding.binding], descriptor,
-                                    &texture->m_image.m_descriptorInfo, binding.descriptorType, binding.binding);
-
-                    break;
-                }
-                case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER: {
-                    auto buffer = reinterpret_cast<Buffer*>(d);
-                    //Debugger::get().log(static_cast<float>(buffer[0].m_size));
-                    if(binding.binding >= descriptorWrites.size())
-                        descriptors.second[i].emplace_back();
-
-                    buffer[i].binding = binding.binding;
-                    writeDescriptor(descriptorWrites[binding.binding], descriptor,
-                                    &buffer[i].m_descriptorInfo, binding.descriptorType, binding.binding);
-                    break;
-                }
-                case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC: {
-
-                    break;
+                        break;
+                    }
                 }
                 case VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT: {
 
@@ -199,14 +213,116 @@ void Element::DescriptorSet::createDescWritesAndUpdate()
     created  = true;
 }
 
+void Element::DescriptorSet::createDescWritesAndUpdate(Element::Descriptor _descriptor)
+{
+    const auto& logicalDevice = Device::getVkDevice();
+    int i  = 0;
+    for (auto& descriptorSet : descriptors.first) {
+
+        auto& descriptorWrites = descriptors.second[i];
+        int j = 0;
+        for (const auto& binding : pipeline->GetPipelineData().shaderInfo)
+        {
+            if(_descriptor != static_cast<Descriptor>(binding.set))
+                continue;
+
+            auto d = data_map[binding.binding];
+            auto desType = VkFunctions::getDescriptorType(binding.bindObjectType);
+            switch (desType)
+            {
+                case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+                case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+                case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC: {
+
+                    auto buffer = static_cast<Buffer*>(d);
+                    if(buffer) {
+                        //Debugger::get().log(static_cast<float>(buffer[0].m_size));
+                        descriptorWrites.emplace_back();
+
+                        buffer[i].binding = binding.binding;
+                        writeDescriptor(descriptorWrites[j], descriptorSet,
+                                        &buffer[i].m_descriptorInfo, desType, binding.binding);
+                        break;
+                    }
+                }
+                case VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER: {
+
+                    const auto& texture = static_cast<Texture*>(d);
+                    if(texture) {
+                        descriptorWrites.emplace_back();
+
+                        texture->m_image.binding = binding.binding;
+                        writeDescriptor(descriptorWrites[j], descriptorSet,
+                                        &texture->m_image.m_descriptorInfo, desType, binding.binding);
+
+                        break;
+                    }
+                }
+                case VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT: {
+
+                    break;
+                }
+            }
+            ++j;
+        }
+        vkUpdateDescriptorSets(logicalDevice,
+                               static_cast<uint32_t>(descriptorWrites.size()),
+                               descriptorWrites.data(), 0, nullptr);
+        ++i;
+    }
+    created  = true;
+}
+
+
+void Element::DescriptorSet::createDescWritesAndUpdate(uint32_t binding)
+{
+    const auto& logicalDevice = Device::getVkDevice();
+    int i  = 0;
+    for (auto& descriptor : descriptors.first) {
+
+        auto& descriptorWrites = descriptors.second[i];
+        auto d = data_map[binding];
+        auto desType = VkFunctions::getDescriptorType(BindObjectType::STATIC_UNIFORM_BUFFER);
+        switch (desType)
+        {
+            case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+            case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            case VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+            case VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC: {
+
+                auto buffer = static_cast<Buffer*>(d);
+                if(buffer) {
+                    //Debugger::get().log(static_cast<float>(buffer[0].m_size));
+                    descriptorWrites.emplace_back();
+
+                    buffer[i].binding = binding;
+                    writeDescriptor(descriptorWrites[0], descriptor,
+                                    &buffer[i].m_descriptorInfo, desType, binding);
+                    break;
+                }
+            }
+        }
+        vkUpdateDescriptorSets(logicalDevice,
+                               static_cast<uint32_t>(descriptorWrites.size()),
+                               descriptorWrites.data(), 0, nullptr);
+        ++i;
+    }
+    created  = true;
+}
+
 void Element::DescriptorSet::flush()
 {
     created = false;
+    descriptors.second[0].clear();
+    for (auto& descriptorWrite : descriptors.second)
+        descriptorWrite.clear();
+
     if (!pipeline)
         return;
 
     const auto& logicalDevice = Device::getVkDevice();
-    vkDeviceWaitIdle(logicalDevice);
+    //vkDeviceWaitIdle(logicalDevice);
     //vkFreeDescriptorSets(logicalDevice, pipeline->GetVkDescriptorPool(), static_cast<uint32_t>(descriptorSets.size()
    // ), descriptorSets.data());
     pipeline = nullptr;
@@ -234,8 +350,8 @@ void Element::DescriptorSet::writeDescriptor(VkWriteDescriptorSet& writeDescript
     writeDescriptorSet = Element::VkInitializers::writeDesciptorSet(descriptor, type, imageInfo, binding);
 }
 
-void Element::DescriptorSet::addData(void *_data) {
-    data.push_back(_data);
+void Element::DescriptorSet::addData(void *_data, int binding) {
+    data_map[binding] = _data;
 }
 
 void Element::DescriptorSet::updateBufferInfo(const VkDescriptorBufferInfo* bufferInfo, uint32_t binding) {
