@@ -1,18 +1,11 @@
-MACRO(SUBDIRLIST result curdir)
-  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
-  SET(dirlist "")
-  FOREACH(child ${children})
-    IF(IS_DIRECTORY ${curdir}/${child})
-      LIST(APPEND dirlist ${child})
-    ENDIF()
-  ENDFOREACH()
-  SET(${result} ${dirlist})
-ENDMACRO()
+add_library(stb stb.h stb_image.h stb_vorbis.c)
+target_include_directories(stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
+#[[
+target_include_directories(imgui
+        INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
+        )
 
-FOREACH(subdir ${SUBDIRS})
-  add_subdirectory(${subdir})
-ENDFOREACH()
-
-#add_subdirectory(stb)
+install(TARGETS imgui DESTINATION lib)
+install(FILES imgui.h DESTINATION include)
+]]
