@@ -26,13 +26,12 @@ Game::~Game()
 void Game::init()
 {
 	Vec3 pos(0, 0, 0);
-	objects.resize(2);
+	objects.resize(1);
 	for (auto& object : objects)
 	{
 		object.model = m_renderer->createModel();
-		object.model->SetMesh(m_renderer->getMesh("cube"));
+		object.model->SetMesh(m_renderer->getMesh("dragon"));
 		object.model->GetTransform().setPosition(pos);
-        object.model->GetTransform().setScale(0.5f);
 		pos += Vec3(1.2, 1, -2);
 	} 
 	 

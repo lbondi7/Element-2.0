@@ -54,15 +54,16 @@ namespace Element {
         std::map<std::string, std::unique_ptr<Material>> dynamic_materials;
 
 
-        void LoadTextureData(const std::string& file, TextureData& textureData);
-        void LoadTextureData(const char* file, TextureData& textureData);
+        bool LoadTextureData(const std::string& file, TextureData& textureData);
+        bool LoadTextureData(const char* file, TextureData& textureData);
 //        void LoadMeshData(const std::string& file, MeshData& meshData);
 //        void LoadMeshData(const char* file, MeshData& meshData);
 
-        void LoadMaterialData(const char* file, MaterialData& materialData);
+        bool LoadMaterialData(const char* file, MaterialData& materialData);
 
         Shader* getShader(const std::string& name, Element::ShaderType type,
                           std::map<std::string, std::unique_ptr<Shader>>& shader_map);
 
-	};
+        bool LoadMeshData(const char *file, MeshData &meshData);
+    };
 }

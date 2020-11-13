@@ -85,6 +85,8 @@ namespace Element {
 
         void setQuadratic(float quadratic);
 
+        bool active = true;
+
     private:
 
         Transform transform;

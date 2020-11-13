@@ -2,6 +2,8 @@
 
 #include "Utilities.h"
 
+#include <element/Debugger.h>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
@@ -23,18 +25,23 @@ template<> struct std::hash<Vertex> {
     }
 };
 
-void Element::Resources::LoadTextureData(const char* file, TextureData& textureData)
+bool Element::Resources::LoadTextureData(const char* file, TextureData& textureData)
 {
     std::string filename = "resources/textures/";
     filename += file;
     textureData.data = stbi_load(filename.c_str(), &textureData.width, &textureData.height, &textureData.channels, STBI_rgb_alpha);
 
     if (!textureData.data) {
+
+        Debugger::get().error("failed to load texture image!");
+        textureData.data = nullptr;
+        return false;
         throw std::runtime_error("failed to load texture image!");
     }
+    return true;
 }
 
-void LoadMeshData(const char* file, Element::MeshData& meshData)
+bool Element::Resources::LoadMeshData(const char* file, Element::MeshData& meshData)
 {
     std::string filename = "resources/models/";
     filename += file;
@@ -45,7 +52,10 @@ void LoadMeshData(const char* file, Element::MeshData& meshData)
     std::string warn, err;
 
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str())) {
-        throw std::runtime_error(warn + err);
+
+        Debugger::get().error(warn + err);
+        return false;
+        //throw std::runtime_error(warn + err);
     }
 
     std::unordered_map<Vertex, uint32_t> uniqueVertices{};
@@ -79,11 +89,12 @@ void LoadMeshData(const char* file, Element::MeshData& meshData)
             i++;
         }
     }
+    return true;
 }
 
-void Element::Resources::LoadTextureData(const std::string& file, TextureData& textureData)
+bool Element::Resources::LoadTextureData(const std::string& file, TextureData& textureData)
 {
-    LoadTextureData(file.c_str(), textureData);
+    return LoadTextureData(file.c_str(), textureData);
 }
 
 //void Element::Resources::LoadMeshData(const std::string& file, MeshData& meshData)
@@ -91,7 +102,7 @@ void Element::Resources::LoadTextureData(const std::string& file, TextureData& t
 //    LoadMeshData(file.c_str(), meshData);
 //}
 
-void Element::Resources::LoadMaterialData(const char *file, MaterialData& materialData) {
+bool Element::Resources::LoadMaterialData(const char *file, MaterialData& materialData) {
 
     std::string filename = "resources/materials/";
     filename += file;
@@ -101,8 +112,12 @@ void Element::Resources::LoadMaterialData(const char *file, MaterialData& materi
 
     std::ifstream is(filename);
 
-    if(is.is_open())
-        tinyobj::LoadMtl(&material_map, &materials, &is, &warn, &err);
+    if(!is.is_open())
+    {
+        Debugger::get().error("failed to load material!");
+        return false;
+    }
+    tinyobj::LoadMtl(&material_map, &materials, &is, &warn, &err);
 
 
     materialData.ambient = Vec3(materials[0].ambient);
@@ -121,6 +136,8 @@ void Element::Resources::LoadMaterialData(const char *file, MaterialData& materi
     materialData.metallic = materials[0].metallic;
     materialData.sheen = materials[0].sheen;
 
+    return true;
+
 //    tinyobj::MaterialFileReader matFileReader(filename);
 //    matFileReader.operator()("plane.mtl", &materials, &material_map, &warn, &err);
 }
@@ -128,7 +145,6 @@ void Element::Resources::LoadMaterialData(const char *file, MaterialData& materi
 Element::Mesh *Element::Resources::mesh(const std::string &name, State state) {
 
     auto tmp_name = (state == State::STATIC ? "s_" : "d_") + Utilities::extractName(name);
-
 
     for (auto& m : static_meshes)
     {
@@ -144,7 +160,14 @@ Element::Mesh *Element::Resources::mesh(const std::string &name, State state) {
     auto& mesh = state == State::STATIC ? static_meshes[tmp_name] : dynamic_meshes[tmp_name];
 
     MeshData data;
-    LoadMeshData(name.c_str(), data);
+    if(!LoadMeshData(name.c_str(), data)){
+        if(state == State::STATIC)
+            static_meshes.erase(tmp_name);
+        if(state == State::DYNAMIC)
+            dynamic_meshes.erase(tmp_name);
+
+        return &static_meshes["s_error"];
+    }
     mesh.vertices = data.vertices;
     mesh.indices = data.indices;
     mesh.Load();
@@ -160,7 +183,15 @@ Element::Texture *Element::Resources::texture(const std::string &name, State sta
         return texture.get();
 
     texture = std::make_unique<Texture>();
-    LoadTextureData(name, texture->data);
+    if(!LoadTextureData(name, texture->data)) {
+        if(state == State::STATIC)
+            static_textures.erase(tmp_name);
+        if(state == State::DYNAMIC)
+            dynamic_textures.erase(tmp_name);
+
+        return static_textures["s_default"].get();
+    }
+
     texture->Load();
     return texture.get();
 }
@@ -193,16 +224,16 @@ void Element::Resources::unbindMeshes() {
 }
 
 void Element::Resources::init() {
-    std::string meshNames[3]{ "cube.obj", "quad.obj", "error.obj" };
-    for (const auto& name : meshNames)
+    std::vector<std::string> names{ "cube.obj", "quad.obj", "error.obj" };
+    for (const auto& name : names)
         mesh(name);
 
-    std::string texts[2]{ "default.jpg", "texture.jpg" };
-    for (const auto& name : texts)
+    names = { "default.jpg", "texture.jpg" };
+    for (const auto& name : names)
         texture(name);
 
-    std::string mats[1]{ "test.mtl"};
-    for (const auto& name : mats)
+    names = { "test.mtl"};
+    for (const auto& name : names)
         material(name);
 }
 
@@ -261,7 +292,14 @@ Element::Material *Element::Resources::material(const std::string &name, Element
         return material.get();
 
     material = std::make_unique<Material>();
-    LoadMaterialData(name.c_str(), material->data);
+    if(!LoadMaterialData(name.c_str(), material->data)){
+        if(state == State::STATIC)
+            static_materials.erase(tmp_name);
+        if(state == State::DYNAMIC)
+            dynamic_materials.erase(tmp_name);
+
+        return static_materials["s_test"].get();
+    }
     material->load();
     return material.get();
 }

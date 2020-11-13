@@ -76,7 +76,7 @@ void Element::VknModel::SetPipeline(VknPipeline* _pipeline)
 
 	pipeline = _pipeline;
 
-	descriptorSet->init(pipeline, descriptorSet->getCount(), 2);
+	descriptorSet->init(_pipeline, descriptorSet->getCount(), 2);
 
 	//descriptorSet->flush();
 	//descriptorSet->init(pipeline, descriptorSet->getCount());

@@ -36,7 +36,7 @@ void Element::Engine::run()
             beginFrame();
             ImGUI::Get().start();
             render();
-            ImGUI::Get().end();
+            //ImGUI::Get().end();
             renderFrame();
             endFrame();
         }
