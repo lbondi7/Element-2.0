@@ -12,8 +12,8 @@
 #include "VknWindow.h"
 #include "PipelineManager.h"
 #include "DebugRenderer.h"
-#include "EleCamera.h"
 #include "LightManager.h"
+#include "EleCamera.h"
 
 namespace Element {
 
@@ -50,8 +50,6 @@ namespace Element {
 
 		void BindMesh(Element::Mesh* mesh, VkCommandBuffer commandBuffer);
 
-		void UnbindMeshes();
-
 		void createSyncObjects();
 
 		void renderModel(Model* object) override;
@@ -78,11 +76,13 @@ namespace Element {
 
 		Camera* createCamera(Element::CameraType type) override;
 
+        std::unique_ptr<Camera> createUniqueCamera(Element::CameraType type) override;
+
 		void setClearColour(const Vec3& clearCol) override;
 
 		void setClearColourNormalised(const Vec3& clearCol) override;
 
-        void setCamera(Element::Camera *_camera) override;
+        void addCamera(Element::Camera *_camera, int element) override;
 
 	private:
 		const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -111,9 +111,7 @@ namespace Element {
 
 		std::unique_ptr<LightManager> m_lightManager;
 
-		EleCamera* camera;
-
-		std::vector<std::unique_ptr<EleCamera>> cameras;
+		std::vector<EleCamera*> cameras;
 
 //		std::vector<Buffer> camBuffers;
 //

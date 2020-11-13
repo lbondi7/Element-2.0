@@ -138,5 +138,30 @@ namespace Element {
             return !(*this < rhs);
         }
 
+        float Vec2::dot(const Vec2 &other) const {
+            return (this->x * other.x) +
+                   (this->y * other.y);
+        }
+
+        float Vec2::distance(const Vec2 &other) const {
+            return std::sqrtf(std::pow(this->x - other.x, 2) +
+                              std::pow(this->y - other.y, 2));
+        }
+
+        float Vec2::length() const {
+            return std::sqrtf(std::pow(this->x, 2) +
+                              std::pow(this->y, 2));
+        }
+
+        float Vec2::dot(const Vec2 &vec1, const Vec2 &vec2) {
+            return (vec1.x * vec2.x) +
+                   (vec1.y * vec2.y);
+        }
+
+        float Vec2::distance(const Vec2 &vec1, const Vec2 &vec2) {
+            return std::sqrtf(std::pow(vec1.x - vec2.x, 2) +
+                              std::pow(vec1.y - vec2.y, 2));
+        }
+
     }
 }

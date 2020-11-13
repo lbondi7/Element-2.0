@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ElementConstants.h"
-
+#include "Entity.h"
 #include "Transform2D.h"
 
 namespace Element {
@@ -10,7 +10,7 @@ namespace Element {
 	class VknPipeline;
 	class Texture;
 
-	class Sprite
+	class Sprite : protected Entity
 	{
 	public:
 		Sprite();

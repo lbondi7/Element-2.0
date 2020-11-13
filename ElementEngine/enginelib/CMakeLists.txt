@@ -23,6 +23,9 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Transform2D.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Maths/Vec3.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Maths/Vec2.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Maths/Vec4.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Light.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/element/Entity.h
     
     #main engine files
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Buffer.cpp
@@ -108,7 +111,14 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VknResources.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VknResources.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.h src/Locator.cpp src/Locator.h src/Light.cpp include/element/Light.h src/LightManager.cpp src/LightManager.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Material.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Locator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Locator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Light.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LightManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LightManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Vec4.cpp
+)
 
 target_include_directories(
     ${PROJECT_NAME} SYSTEM PUBLIC

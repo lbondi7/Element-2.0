@@ -56,17 +56,23 @@ void Element::VknSprite::SetTexture(Texture* texture, bool keepSize)
 		transform.setSize(Vec2(static_cast<float>(texture->data.width),
                                static_cast<float>(texture->data.height)));
 
-	descriptorSet->update(uniformBuffers, m_texture);
+    if(descriptorSet)
+        descriptorSet->updateImageInfo(m_texture, texture ? texture : Locator::getResource()->texture("default"));
 	if(dirty == DirtyFlags::CLEAN)
 		dirty = DirtyFlags::DIRTY;
 }
 
 void Element::VknSprite::SetPipeline(VknPipeline* pipeline)
 {
-	m_pipeline = pipeline;
+    if (m_pipeline == pipeline)
+        return;
+
+    m_pipeline = pipeline;
 	//descriptorSet->flush();
-	descriptorSet->init(m_pipeline, descriptorSet->getCount());
+	//descriptorSet->init(m_pipeline, descriptorSet->getCount());
 	dirty = DirtyFlags::PIPELINE_DIRTY;
+
+    descriptorSet->init(pipeline, descriptorSet->getCount(), 2);
 }
 
 const Element::VknPipeline* Element::VknSprite::GetOldPipeline() const noexcept
@@ -84,24 +90,24 @@ void Element::VknSprite::setDirty(DirtyFlags flag)
 	dirty = flag;
 }
 
-void Element::VknSprite::updateUniformBuffers(bool cameraChanged, const glm::mat4& viewMatrix, const glm::mat4& projMatrix, uint32_t imageIndex)
-{
-	if (!transform.isUpdated() && !cameraChanged)
-		return;
-
-	UniformBufferObject ubo{};
-	const auto& scalar = glm::vec3(transform.getSize().x * transform.getScale().x,
-		transform.getSize().y * transform.getScale().y, 1.0f);
-	auto pos = Utilities::vec3RefToGlmvec3(transform.getPosition());
-	pos.y *= -1;
-	ubo.model = glm::translate(ubo.model, pos + scalar);
-	ubo.model = glm::scale(ubo.model, scalar);
-	ubo.model = glm::rotate(ubo.model, glm::radians(transform.getRotationZ()), glm::vec3(0.0f, 0.0f, 1.0f));
-//	ubo.view = viewMatrix;
-//	ubo.proj = projMatrix;
-
-	uniformBuffers[imageIndex].CopyMemory(&ubo, sizeof(ubo));
-}
+//void Element::VknSprite::updateUniformBuffers(bool cameraChanged, const glm::mat4& viewMatrix, const glm::mat4& projMatrix, uint32_t imageIndex)
+//{
+//	if (!transform.isUpdated() && !cameraChanged)
+//		return;
+//
+//	UniformBufferObject ubo{};
+//	const auto& scalar = glm::vec3(transform.getSize().x * transform.getScale().x,
+//		transform.getSize().y * transform.getScale().y, 1.0f);
+//	auto pos = Utilities::vec3RefToGlmvec3(transform.getPosition());
+//	pos.y *= -1;
+//	ubo.model = glm::translate(ubo.model, pos + scalar);
+//	ubo.model = glm::scale(ubo.model, scalar);
+//	ubo.model = glm::rotate(ubo.model, glm::radians(transform.getRotationZ()), glm::vec3(0.0f, 0.0f, 1.0f));
+////	ubo.view = viewMatrix;
+////	ubo.proj = projMatrix;
+//
+//	uniformBuffers[imageIndex].CopyMemory(&ubo, sizeof(ubo));
+//}
 
 void Element::VknSprite::setEntityState(EntityState state)
 {
@@ -130,7 +136,12 @@ Element::EntityState Element::VknSprite::getPrevEntityState()
 
 void Element::VknSprite::destroy()
 {
-	//descriptorSet->flush();
+    if(destroyed)
+        return;
+
+    destroyed = true;
+
+	descriptorSet->flush();
 	m_mesh = nullptr;
 	m_texture = nullptr;
 	m_pipeline = nullptr;
@@ -154,24 +165,27 @@ void Element::VknSprite::init(VknPipeline* pipeline, Mesh* mesh, uint32_t imageC
 	prevEntityState = EntityState::NOT_RENDERED;
 	m_pipeline = pipeline;
 	m_mesh = mesh;
-	descriptorSet = std::make_unique<DescriptorSet>();
-	descriptorSet->init(m_pipeline, imageCount);
+	//descriptorSet = std::make_unique<DescriptorSet>();
+	//descriptorSet->init(m_pipeline, imageCount);
 	SetTexture(Locator::getResource()->texture("default"), false);
-	//descriptorSet->createDescWritesAndUpdate(uniformBuffers, m_texture);
-	id = IdHandler::GetID();
+    descriptorSet = std::make_unique<DescriptorSet>(pipeline, imageCount, 2);
+    descriptorSet->addData(uniformBuffers.data(), 0);
+    descriptorSet->addData(m_texture, 1);
+    descriptorSet->createDescWritesAndUpdate();
 }
 
 void Element::VknSprite::reInit(uint32_t imageCount) {
 	entityState = EntityState::NOT_RENDERED;
 	prevEntityState = EntityState::NOT_RENDERED;
-	descriptorSet = std::make_unique<DescriptorSet>();
-	descriptorSet->init(m_pipeline, imageCount);
-	descriptorSet->update(uniformBuffers, m_texture);
+    descriptorSet->init(descriptorSet->getPipeline(), imageCount, descriptorSet->getId());
+    descriptorSet->createDescWritesAndUpdate();
+	//descriptorSet->init(m_pipeline, imageCount);
+	//descriptorSet->update(uniformBuffers, m_texture);
 	dirty = DirtyFlags::DIRTY;
 }
 
-void Element::VknSprite::updateUniformBuffers(bool cameraChanged, UniformBufferObject &ubo, uint32_t imageIndex) {
-    if (!transform.isUpdated() && !cameraChanged)
+void Element::VknSprite::updateUniformBuffers(UniformBufferObject &ubo, uint32_t imageIndex) {
+    if (!transform.isUpdated())
         return;
 
     const auto& scalar = glm::vec3(transform.getSize().x * transform.getScale().x,
@@ -183,4 +197,8 @@ void Element::VknSprite::updateUniformBuffers(bool cameraChanged, UniformBufferO
     ubo.model = glm::rotate(ubo.model, glm::radians(transform.getRotationZ()), glm::vec3(0.0f, 0.0f, 1.0f));
 
     uniformBuffers[imageIndex].CopyMemory(&ubo, sizeof(ubo));
+}
+
+Element::DescriptorSet *Element::VknSprite::getDescriptorSet() const {
+    return descriptorSet.get();
 }

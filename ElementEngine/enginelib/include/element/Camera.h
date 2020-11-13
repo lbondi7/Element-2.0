@@ -1,20 +1,28 @@
 #pragma once
 
 #include "ElementConstants.h"
+
+#include "Entity.h"
 #include "Transform.h"
+#include "Maths/Vec4.h"
+
 namespace Element {
+
+    class VknPipeline;
 
 	enum class CameraType : int {
 		PERSPECTIVE ,
 		ORTHOGRAPHIC  = 1
 	};
 
-	class Camera
+	class Camera : public Entity
 	{
 	public:
 //		Camera() = default;
 //		Camera(CameraType _type){};
-//		~Camera()  = default;
+
+        //Camera(CameraType _type, VknPipeline* pipeline, uint32_t imageCount);
+		virtual ~Camera() = default;
 
 		[[nodiscard]] const Vec3& GetLookAt() const;
 		[[nodiscard]] const Vec3& GetForward() const;
@@ -55,8 +63,13 @@ namespace Element {
 		float getRotY();
 		float getRotZ();
 
-		bool isReady();
-		void setReady(bool _ready);
+        [[nodiscard]] const Vec4& getViewport() const;
+        [[nodiscard]] const Vec4& getRect() const;
+        void setRect(const Vec4 &_rect);
+        void setViewport(const Vec4 &_viewport);
+
+		bool isEnabled() const;
+		void setEnabled(bool _enabled);
 
 	protected:
 
@@ -67,9 +80,11 @@ namespace Element {
 		Vec3 up;
 		Vec3 forward;
 		Vec3 right;
+        Vec4 viewport;
+        Vec4 rect;
 		float zoom  = 1.0f;
-		float FOV  = 60.0f;
+		float fov  = 60.0f;
 		bool cameraChanged  = false;
-		bool ready = false;
+		bool enabled = false;
 	};
 }

@@ -5,6 +5,7 @@
 #include "VknFrameBuffers.h"
 
 #include <memory>
+
 namespace Element {
 	class RenderPass
 	{
@@ -27,7 +28,7 @@ namespace Element {
 		void begin(VkCommandBuffer vkCommandBuffer, int i);
 		void end(VkCommandBuffer vkCommandBuffer);
 
-		void setClearColour(const glm::vec3& clearColour);
+		void setClearColour(const Vec3& clearColour);
 
 	private:
 
@@ -35,7 +36,7 @@ namespace Element {
 		std::unique_ptr<FrameBuffers> m_frameBuffers;
 		SwapChain* m_swapChain;
 
-		glm::vec3 m_clearColour{0.0f, 0.3f, 0.8f};
+		Vec3 m_clearColour = Vec3(0.0f, 0.3f, 0.8f);
 
 		bool created  = false;
 	};

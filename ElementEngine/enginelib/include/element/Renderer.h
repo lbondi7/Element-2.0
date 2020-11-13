@@ -48,9 +48,11 @@ namespace Element {
 
 		virtual void setClearColourNormalised(const Vec3& clearCol) = 0;
 
-		virtual void setCamera(Element::Camera* _camera) = 0;
+		virtual void addCamera(Element::Camera *_camera, int element) = 0;
 
 		virtual Camera* createCamera(Element::CameraType type) = 0;
+
+        virtual std::unique_ptr<Camera> createUniqueCamera(Element::CameraType type) = 0;
 
 		virtual Sprite* createNewSprite() = 0;
 

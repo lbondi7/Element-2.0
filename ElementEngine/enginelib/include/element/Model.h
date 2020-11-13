@@ -2,6 +2,7 @@
 
 #include "ElementConstants.h"
 #include "Transform.h"
+#include "Entity.h"
 
 namespace Element {
 
@@ -9,7 +10,7 @@ namespace Element {
 	struct Mesh;
 	struct Texture;
 
-	class Model
+	class Model : public Entity
 	{
 	public:
 		//explicit Model();

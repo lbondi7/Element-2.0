@@ -163,7 +163,7 @@ void Element::RenderPass::end(VkCommandBuffer vkCommandBuffer)
     vkCmdEndRenderPass(vkCommandBuffer);
 }
 
-void Element::RenderPass::setClearColour(const glm::vec3& clearColour)
+void Element::RenderPass::setClearColour(const Vec3& clearColour)
 {
     m_clearColour = clearColour;
 }

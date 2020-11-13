@@ -8,24 +8,25 @@
 
 #include "Buffer.h"
 #include "DescriptorSet.h"
-#include "VknPipeline.h"
 
+#include <element/Maths/Vec4.h>
+#include <element/Maths/Vec2.h>
 #include <glm/glm.hpp>
+
+namespace Element{
+    class VknPipeline;
+}
 
 namespace Element {
     class EleCamera : public Camera {
     public:
-        EleCamera();
-        explicit EleCamera(CameraType _type);
-        explicit EleCamera(CameraType _type, const glm::vec4& viewport, const glm::vec4& rect);
-        explicit EleCamera(CameraType _type, VknPipeline* pipeline);
+        explicit EleCamera(CameraType _type, VknPipeline* pipeline, uint32_t imageCount);
+        ~EleCamera() override;
+
+        void init(CameraType _type, VknPipeline* pipeline, uint32_t imageCount);
         void update(float windowWidth, float windowHeight, uint32_t imageIndex);
-        [[nodiscard]] const glm::vec4& getViewport() const;
-        [[nodiscard]] const glm::vec4& getRect() const;
         [[nodiscard]] const glm::mat4& getViewMatrix() const;
         [[nodiscard]] const glm::mat4& getProjMatrix() const;
-        void setRect(glm::vec4 _rect);
-        void setViewport(glm::vec4 _viewport);
 
 //        std::vector<Buffer> uniformBuffers;
 
@@ -41,21 +42,31 @@ namespace Element {
 
         void initDescSet(VknPipeline* pipeline, uint32_t imageCount, int id);
 
-        std::vector<Buffer> uniformBuffers;
+        DescriptorSet* getDescriptorSet(const std::string& pipelineName);
 
-        DescriptorSet* descriptorSet;
+        void reInit(uint32_t imageCount);
+
+        void destroy() override;
+
+        void setViewportandRect(VkCommandBuffer vkCmdBuffer, Vec2 windowSize);
+
     private:
 
-        VkViewport vkViewport;
-        VkRect2D scissorRect;
+        std::vector<Buffer> uniformBuffers;
 
-        glm::vec4 viewport;
-        glm::vec4 rect;
-        glm::mat4 transformMatrix  = glm::mat4(1.0f);
-        glm::mat4 viewMatrix  = glm::mat4(1.0f);
-        glm::mat4 projectionMatrix  = glm::mat4(1.0f);
-        glm::mat4 inverted;
+        std::unique_ptr<DescriptorSet> descriptorSet;
+        void addDescriptorSet(VknPipeline* pipeline, uint32_t imageCount);
 
+        std::map<std::string, std::unique_ptr<DescriptorSet>> descriptorSets;
+
+
+        VkViewport vkViewport = {0, 0, 1, 1};
+        VkRect2D scissorRect = {0, 0, 1, 1};
+
+        glm::mat4 transformMatrix = glm::mat4(1.0f);
+        glm::mat4 viewMatrix = glm::mat4(1.0f);
+        glm::mat4 projectionMatrix = glm::mat4(1.0f);
+        glm::mat4 inverted = glm::mat4(1.0f);
 
     };
 }

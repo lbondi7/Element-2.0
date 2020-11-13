@@ -63,12 +63,12 @@ void Element::Camera::SetZoom(float _zoom)
 
 float Element::Camera::GetFOV()
 {
-    return FOV;
+    return fov;
 }
 
 void Element::Camera::SetFOV(float fov)
 {
-    FOV = std::min(179.99f, std::max(0.01f, fov));
+    fov = std::min(179.99f, std::max(0.01f, fov));
     cameraChanged = true;
 }
 
@@ -213,12 +213,12 @@ float Element::Camera::getRotZ()
     return transform.getRotationZ();
 }
 
-bool Element::Camera::isReady() {
-    return ready;
+bool Element::Camera::isEnabled() const {
+    return enabled;
 }
 
-void Element::Camera::setReady(bool _ready) {
-    ready = _ready;
+void Element::Camera::setEnabled(bool _enabled) {
+    enabled = _enabled;
 }
 
 const Element::Transform &Element::Camera::getTransform() const {
@@ -231,4 +231,26 @@ transform = _transform;
 
 const Vec3 &Element::Camera::GetLookAt() const {
     return lookAtPos;
+}
+
+const Vec4& Element::Camera::getViewport() const
+{
+    return viewport;
+}
+
+const Vec4& Element::Camera::getRect() const
+{
+    return rect;
+}
+
+void Element::Camera::setRect(const Vec4 &_rect)
+{
+    rect = _rect;
+    cameraChanged = true;
+}
+
+void Element::Camera::setViewport(const Vec4 &_viewport)
+{
+    viewport = _viewport;
+    cameraChanged = true;
 }

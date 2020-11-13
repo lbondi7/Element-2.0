@@ -33,10 +33,12 @@ namespace Element {
 
 		void bind(VkCommandBuffer vkCommandBuffer);
 
-		VkDescriptorSetLayout GetVkDescriptorSetLayout();
+		VkDescriptorSetLayout getVkDescriptorSetLayout(int layout);
 		VkPipeline GetVkPipeline();
 		VkPipelineLayout GetVkPipelineLayout();
 		//VkDescriptorPool GetVkDescriptorPool();
+
+		uint32_t getDescriptorLayoutsCount();
 
 		VkDescriptorPool allocateDescriptorPool(uint32_t descriptorCount);
 
@@ -57,26 +59,22 @@ namespace Element {
 		void setBound(bool _bound);
 
 		const std::string& getName();
-
-        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
-        VkDescriptorSetLayout m_viewDescSetLayout;
 	private:
 		SwapChain* m_swapChain;
 		RenderPass* m_renderPass;
-		VkDescriptorSetLayout m_descriptorSetLayout;
-		VkPipelineLayout m_pipelineLayout;
+
 		VkPipeline m_vkPipeline;
+		VkPipelineLayout m_pipelineLayout;
+        std::vector<VkDescriptorSetLayout> m_descriptorSetLayouts;
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+
 		PipelineData m_pipelineData;
 		bool flushed = false;
 		bool bound = false;
 
         std::vector<std::unique_ptr<VknDescriptorPool>> descriptorPools;
-		std::vector<VknDescriptorPool*> m_descriptorPools;
 		std::string name;
 
         void reCreateDescriptorPool();
-
-        void createPipelineLayoutTemp();
     };
 }

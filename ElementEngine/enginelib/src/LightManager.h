@@ -12,6 +12,12 @@
 #include <vector>
 #include <memory>
 #include <queue>
+#include <map>
+
+
+namespace  Element {
+    class VknPipeline;
+}
 
 namespace  Element {
     struct LightData{
@@ -37,12 +43,12 @@ namespace  Element {
     class LightManager {
 
     public:
-        explicit LightManager(uint32_t imageCount);
+        explicit LightManager(VknPipeline* pipeline, uint32_t imageCount);
         ~LightManager() = default;
 
-        void init(uint32_t imageCount);
+        void init(VknPipeline* pipeline, uint32_t imageCount);
 
-        void update(const Vec3& camPos, uint32_t imageIndex);
+        void update(uint32_t imageIndex);
 
         Light* getLight();
 
@@ -53,9 +59,13 @@ namespace  Element {
 
         void deInit();
 
-        DescriptorSet* descriptorSet;
+        void addDescriptorSet(VknPipeline* pipeline, uint32_t imageCount);
+
+        DescriptorSet* getDescriptorSet(const std::string& pipelineName);
 
     private:
+
+        std::map<const std::string, std::unique_ptr<DescriptorSet>> descriptorSets;
 
         uint32_t lightCount = 0;
         std::vector<std::unique_ptr<Light>> lights;

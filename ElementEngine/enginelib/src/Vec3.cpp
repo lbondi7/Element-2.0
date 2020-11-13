@@ -4,6 +4,7 @@
 
 #include <element/Maths/Vec3.h>
 
+
 namespace Element {
 namespace Maths {
     Vec3::Vec3() : x(0.0f), y(0.0f), z(0.0f) {}
@@ -155,6 +156,48 @@ namespace Maths {
 
     bool Vec3::operator>=(const Vec3 &rhs) const {
         return !(*this < rhs);
+    }
+
+    float Vec3::dot(const Vec3 &other) const {
+        return (this->x * other.x) +
+        (this->y * other.y) +
+        (this->z * other.z);
+    }
+
+    Vec3 Vec3::cross(const Vec3 &other) const {
+        return Vec3((this->y * other.z) - (this->z * other.y),
+                    (this->z * other.x) - (this->x * other.z),
+                    (this->x * other.y) - (this->y * other.x));
+    }
+
+    float Vec3::distance(const Vec3 &other) const {
+        return std::sqrtf(std::pow(this->x - other.x, 2) +
+        std::pow(this->y - other.y, 2) +
+        std::pow(this->z - other.z, 2));
+    }
+
+    float Vec3::length() const {
+        return std::sqrtf(std::pow(this->x, 2) +
+        std::pow(this->y, 2) +
+        std::pow(this->z, 2));
+    }
+
+    float Vec3::dot(const Vec3 &vec1, const Vec3 &vec2) {
+        return (vec1.x * vec2.x) +
+        (vec1.y * vec2.y) +
+        (vec1.z * vec2.z);
+    }
+
+    Vec3 Vec3::cross(const Vec3 &vec1, const Vec3 &vec2) {
+        return Vec3((vec1.y * vec2.z) - (vec1.z * vec2.y),
+                    (vec1.z * vec2.x) - (vec1.x * vec2.z),
+                    (vec1.x * vec2.y) - (vec1.y * vec2.x));
+    }
+
+    float Vec3::distance(const Vec3 &vec1, const Vec3 &vec2) {
+        return std::sqrtf(std::pow(vec1.x - vec2.x, 2) +
+        std::pow(vec1.y - vec2.y, 2) +
+        std::pow(vec1.z - vec2.z, 2));
     }
 
 }

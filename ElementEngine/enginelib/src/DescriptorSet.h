@@ -2,31 +2,27 @@
 
 #include "VknConstants.h"
 #include "Buffer.h"
-#include "Texture.h"
 #include "ShaderInfo.h"
+
+#include <map>
 
 namespace Element{
 
     class VknPipeline;
+    class Texture;
 
 	class DescriptorSet
 	{
 	public:
 		DescriptorSet() = default;
-		//DescriptorSet(Pipeline* _pipeline, uint32_t imageCount);
+		DescriptorSet(VknPipeline* _pipeline, uint32_t imageCount, int id);
 		~DescriptorSet();
-
-		void init(VknPipeline* _pipeline, uint32_t imageCount);
 
         void init(VknPipeline *_pipeline, uint32_t imageCount, int id);
 
-        void init(VknPipeline *_pipeline, uint32_t imageCount, float h, float y);
-
-		void createDescWriteAndUpdate(std::vector<void*>& data);
+        void reInit(uint32_t imageCount);
 
         void createDescWritesAndUpdate();
-
-		void update(const std::vector<Buffer>& _uniformBuffers, const Texture* _texture);
 
 		void flush();
 
@@ -34,27 +30,26 @@ namespace Element{
 
 		VknPipeline* getPipeline();
 
-		void addData(void* _data);
-
-		void replaceData(void* _data, int placement);
-
-        void createDescWritesAndUpdate(Element::Descriptor _descriptor);
+		void addData(void* _data, int binding);
 
         void updateBufferInfo(const VkDescriptorBufferInfo *bufferInfo, uint32_t binding = 1);
 
-        void updateImageInfo(const VkDescriptorImageInfo *imageInfo, uint32_t binding = -1);
+        void updateImageInfo(Texture* oldTexture, Texture* newTexture);
 
 		std::vector<VkDescriptorSet> descriptorSets;
         std::vector<void*> data;
+        std::map<uint32_t, void*> data_map;
 
-        //std::vector<std::pair<VkDescriptorSet, std::vector<VkWriteDescriptorSet>>> descriptors;
+        [[nodiscard]] int getId() const;
 
-        std::pair<std::vector<VkDescriptorSet>, std::vector<std::vector<VkWriteDescriptorSet>>> descriptors;
+        [[nodiscard]] VkDescriptorSet getDescriptorSet(int i) const;
+
 	private:
 		uint32_t count;
 		VknPipeline* pipeline;
         int id;
 		bool created = false;
+        std::pair<std::vector<VkDescriptorSet>, std::vector<std::vector<VkWriteDescriptorSet>>> descriptors;
 
         void writeDescriptor(VkWriteDescriptorSet &writeDescriptorSet, VkDescriptorSet descriptor,
                              const VkDescriptorBufferInfo *bufferInfo, VkDescriptorType type, uint32_t binding);

@@ -61,7 +61,7 @@ Element::VknPipeline::~VknPipeline()
 void Element::VknPipeline::init() {
 
     createDescriptorSetLayout();
-    createPipelineLayoutTemp();
+    createPipelineLayout();
     createVknPipeline();
     createDescriptorPool();
 }
@@ -73,9 +73,11 @@ void Element::VknPipeline::destroy()
         pool->destroy();
     }
     descriptorPools.clear();
+
     auto logicalDevice = Device::getVkDevice();
     vkDestroyPipelineLayout(logicalDevice, m_pipelineLayout, nullptr);
-    vkDestroyDescriptorSetLayout(logicalDevice, m_descriptorSetLayout, nullptr);
+    for (auto& layout : m_descriptorSetLayouts)
+        vkDestroyDescriptorSetLayout(logicalDevice, layout, nullptr);
 }
 
 void Element::VknPipeline::reInitVknPipeline(SwapChain* swapChain, RenderPass* renderPass) {
@@ -112,31 +114,6 @@ void Element::VknPipeline::createPipelineLayout() {
 
     auto logicalDevice = Device::getVkDevice();
 
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo = VkInitializers::pipelineLayoutCreateInfo(&m_descriptorSetLayout);
-
-    if (vkCreatePipelineLayout(logicalDevice, &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create pipeline layout!");
-    }
-}
-
-void Element::VknPipeline::createPipelineLayoutTemp() {
-
-    auto logicalDevice = Device::getVkDevice();
-
-//    VkDescriptorSetLayoutBinding binding{};
-//    binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//    binding.binding = 0;
-//    binding.descriptorCount = 1;
-//    binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-//    VkDescriptorSetLayoutCreateInfo layoutInfo =
-//            VkInitializers::descriptorSetLayoutCreateInfo(&binding, 1);
-//
-//    if (vkCreateDescriptorSetLayout(Device::getVkDevice(), &layoutInfo, nullptr, &m_viewDescSetLayout) != VK_SUCCESS) {
-//        throw std::runtime_error("failed to create descriptor set layout!");
-//    }
-
-//   std::array<VkDescriptorSetLayout, 2> descLayouts {m_viewDescSetLayout, m_descriptorSetLayout};
-
     VkPipelineLayoutCreateInfo pipelineLayoutInfo = VkInitializers::pipelineLayoutCreateInfo(
             m_descriptorSetLayouts.data(), m_descriptorSetLayouts.size());
 
@@ -167,12 +144,6 @@ void Element::VknPipeline::createDescriptorSetLayout() {
             throw std::runtime_error("failed to create descriptor set layout!");
         }
     }
-//    VkDescriptorSetLayoutCreateInfo layoutInfo =
-//            VkInitializers::descriptorSetLayoutCreateInfo(bindingsData.data(), static_cast<uint32_t>(bindingsData.size()));
-//
-//    if (vkCreateDescriptorSetLayout(Device::getVkDevice(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
-//        throw std::runtime_error("failed to create descriptor set layout!");
-//    }
 }
 
 void Element::VknPipeline::createDescriptorPool() {
@@ -264,11 +235,6 @@ void Element::VknPipeline::createVknPipeline() {
     }
 }
 
-VkDescriptorSetLayout Element::VknPipeline::GetVkDescriptorSetLayout()
-{
-    return m_descriptorSetLayout;
-}
-
 VkPipeline Element::VknPipeline::GetVkPipeline()
 {
     return m_vkPipeline;
@@ -296,3 +262,12 @@ VkDescriptorPool Element::VknPipeline::allocateDescriptorPool(uint32_t descripto
     pool->init(m_pipelineData, m_swapChain->getImageCount());
     return pool->getVkDescriptorPool();
 }
+
+VkDescriptorSetLayout Element::VknPipeline::getVkDescriptorSetLayout(int layout) {
+    return m_descriptorSetLayouts[layout];
+}
+
+uint32_t Element::VknPipeline::getDescriptorLayoutsCount() {
+    return static_cast<uint32_t>(m_descriptorSetLayouts.size());
+}
+

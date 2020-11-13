@@ -15,8 +15,6 @@ namespace Element {
 
         VknModel(VknPipeline *pipeline, uint32_t imageCount);
 
-        VknModel(VknPipeline *pipeline, uint32_t imageCount, std::vector<Buffer>& cameraBuffers);
-
         ~VknModel() override;
 
         Mesh *GetMesh() override;
@@ -40,10 +38,10 @@ namespace Element {
 
         void setDirty(DirtyFlags flag);
 
-        void updateUniformBuffers(bool cameraChanged, const glm::mat4 &viewMatrix, const glm::mat4 &projMatrix,
-                                  uint32_t imageIndex);
+//        void updateUniformBuffers(const glm::mat4 &viewMatrix, const glm::mat4 &projMatrix,
+//                                  uint32_t imageIndex);
 
-        void updateUniformBuffers(bool cameraChanged, UniformBufferObject &ubo, uint32_t imageIndex);
+        void updateUniformBuffers(UniformBufferObject &ubo, uint32_t imageIndex);
 
         void setEntityState(EntityState state);
 
@@ -51,14 +49,13 @@ namespace Element {
 
         Element::EntityState getPrevEntityState();
 
-        void destroy();
+        void destroy() override;
 
         void init(VknPipeline *pipeline, uint32_t imageCount);
 
         void reInit(uint32_t imageCount);
 
-        DescriptorSet* descriptorSet;
-
+        [[nodiscard]] DescriptorSet* getDescriptorSet() const;
 
     private:
         std::vector<void*> data;
@@ -66,9 +63,9 @@ namespace Element {
         EntityState entityState;
         EntityState prevEntityState;
 
+        std::unique_ptr<DescriptorSet> descriptorSet;
+
         VknPipeline *oldPipeline;
         DirtyFlags dirty = DirtyFlags::CLEAN;
-
-        void init(VknPipeline *_pipeline, uint32_t imageCount, std::vector<Buffer> &cameraBuffers);
     };
 }

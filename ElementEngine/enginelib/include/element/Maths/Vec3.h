@@ -61,6 +61,20 @@ namespace Element {
 
             bool operator>=(const Vec3 &rhs) const;
 
+            [[nodiscard]] float dot(const Vec3& other) const;
+
+            [[nodiscard]] Vec3 cross(const Vec3 &other) const;
+
+            [[nodiscard]] float distance(const Vec3 &other) const;
+
+            [[nodiscard]] float length() const;
+
+            static float dot(const Vec3& vec1, const Vec3& vec2);
+
+            static Vec3 cross(const Vec3& vec1, const Vec3& vec2);
+
+            static float distance(const Vec3& vec1, const Vec3& vec2);
+
             union {
                 float x, r, s;
             };

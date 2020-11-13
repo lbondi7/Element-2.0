@@ -20,6 +20,7 @@ Game::Game()
 
 Game::~Game()
 {
+
 }
 
 void Game::init()
@@ -35,7 +36,9 @@ void Game::init()
 		pos += Vec3(1.2, 1, -2);
 	} 
 	 
-	camera = m_renderer->createCamera(Element::CameraType::PERSPECTIVE);
+	camera = m_renderer->createUniqueCamera(Element::CameraType::PERSPECTIVE);
+    //camerab = m_renderer->createUniqueCamera(Element::CameraType::PERSPECTIVE);
+    //camerab->setEnabled(false);
 	//camera = m_renderer->createOrthographicCamera();
 	//glm::vec4 viewport = camera->GetViewport();
 	//viewport.x = 0.5f; 
@@ -46,7 +49,7 @@ void Game::init()
 
 	//camera->SetPosX(m_renderer->getWindow()->getSize().x );
 	//camera->SetPosY(m_renderer->getWindow()->getSize().y );
-	m_renderer->setCamera(camera);
+    //m_renderer->addCamera(camera, 0);
 
 	//sprite = m_renderer->createNewSprite();
 	//sprite->GetTransform().setPosition(0.0f, 0.0f);

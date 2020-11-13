@@ -5,19 +5,20 @@
 #include "LightManager.h"
 #include "Locator.h"
 #include "VknResources.h"
+#include "VknPipeline.h"
 
 #include <element/Debugger.h>
 #include <glm/glm.hpp>
 
 const int MAX_LIGHT_COUNT = 100;
 
-Element::LightManager::LightManager(uint32_t imageCount) {
+Element::LightManager::LightManager(Element::VknPipeline *pipeline, uint32_t imageCount) {
 
-    init(imageCount);
+    init(pipeline, imageCount);
 
 }
 
-void Element::LightManager::init(uint32_t imageCount) {
+void Element::LightManager::init(Element::VknPipeline *pipeline, uint32_t imageCount) {
 
     lightBuffers.resize(imageCount);
     lightConstantsBuffers.resize(imageCount);
@@ -39,12 +40,11 @@ void Element::LightManager::init(uint32_t imageCount) {
     lights[0]->setColour(col);
     lightCount++;
 
-
-
+    addDescriptorSet(pipeline, imageCount);
 }
 
 
-void Element::LightManager::update(const Vec3& camPos, uint32_t imageIndex){
+void Element::LightManager::update(uint32_t imageIndex){
 
     LightData l[MAX_LIGHT_COUNT];
     int i = 0;
@@ -80,8 +80,6 @@ void Element::LightManager::update(const Vec3& camPos, uint32_t imageIndex){
     }
 
     LightConstants lightConst{};
-    //lightConst.camPos = camPos;
-    //lightConst.camPos.y *= -1;
     lightConst.number = i;
 
     lightBuffers[imageIndex].CopyMemory(&l, sizeof(LightData) * i);
@@ -113,8 +111,12 @@ std::vector<Element::Buffer> &Element::LightManager::getLightConstantsBuffers() 
 
 void Element::LightManager::deInit() {
 
-    for (int i = 0; i < lightBuffers.size(); ++i) {
+    for (auto& set : descriptorSets)
+        set.second->flush();
 
+    descriptorSets.clear();
+
+    for (int i = 0; i < lightBuffers.size(); ++i) {
         lightBuffers[i].Destroy();
         lightConstantsBuffers[i].Destroy();
     }
@@ -122,4 +124,17 @@ void Element::LightManager::deInit() {
 
 std::vector<std::unique_ptr<Element::Light>> &Element::LightManager::getLights() {
     return lights;
+}
+
+void Element::LightManager::addDescriptorSet(Element::VknPipeline *pipeline, uint32_t imageCount) {
+
+    const auto& name = pipeline->getName();
+    descriptorSets.emplace(name, std::make_unique<DescriptorSet>(pipeline, imageCount, 1));
+    descriptorSets[name]->addData(lightBuffers.data(), 0);
+    descriptorSets[name]->addData(lightConstantsBuffers.data(), 1);
+    descriptorSets[name]->createDescWritesAndUpdate();
+}
+
+Element::DescriptorSet *Element::LightManager::getDescriptorSet(const std::string &pipelineName) {
+    return descriptorSets[pipelineName].get();
 }
