@@ -15,6 +15,8 @@ layout(set = 2, binding = 0) uniform UniformBufferObject {
     // mat4 proj;
 } ubo;
 
+layout(set = 2, binding = 5) readonly uniform sampler2D UniformBufferObject;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inColor;
 layout(location = 2) in vec2 inTexCoord;
@@ -26,7 +28,6 @@ layout(location = 3) out vec3 camPos;
 
 void main() {
 
-    
     vec4 pos = ubo.model * vec4(inPosition, 1.0);
     fragVert = pos.xyz;
     //fragColor = (ubo.model * vec4(inColor, 1.0)).xyz;

@@ -27,12 +27,17 @@ void Game::init()
 {
 	Vec3 pos(0, 0, 0);
 	objects.resize(1);
+	int i  = 0;
 	for (auto& object : objects)
 	{
 		object.model = m_renderer->createModel();
-		object.model->SetMesh(m_renderer->getMesh("dragon"));
+		if(i == 1)
+            object.model->SetMesh(m_renderer->getMesh("Error"));
+        else
+            object.model->SetMesh(m_renderer->getMesh("cube"));
 		object.model->GetTransform().setPosition(pos);
 		pos += Vec3(1.2, 1, -2);
+		++i;
 	} 
 	 
 	camera = m_renderer->createUniqueCamera(Element::CameraType::PERSPECTIVE);
