@@ -21,14 +21,14 @@ namespace Element {
 	{
 	public:
 		VknPipeline() = default;
-		VknPipeline(SwapChain* swapChain, RenderPass* renderPass, const std::string& name, const PipelineData& pipelineInfo);
+		VknPipeline(VknSwapChain* swapChain, VknRenderPass* renderPass, const std::string& name, const PipelineData& pipelineInfo);
 		~VknPipeline();
 
 		void init();
 
 		void destroy();
 
-		void reInitVknPipeline(SwapChain* swapChain, RenderPass* renderPass);
+		void reInitVknPipeline();
 
 		void flush();
 
@@ -61,8 +61,8 @@ namespace Element {
 
 		const std::string& getName();
 	private:
-		SwapChain* m_swapChain;
-		RenderPass* m_renderPass;
+		VknSwapChain* m_swapChain;
+		VknRenderPass* m_renderPass;
 
 		VkPipeline m_vkPipeline;
 		VkPipelineLayout m_pipelineLayout;

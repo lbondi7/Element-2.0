@@ -50,9 +50,9 @@ namespace Element {
 
 		virtual void addCamera(Element::Camera *_camera, int element) = 0;
 
-		virtual Camera* createCamera(Element::CameraType type) = 0;
+		virtual Camera* createCamera(Element::ViewType type, ViewDimension dimension) = 0;
 
-        virtual std::unique_ptr<Camera> createUniqueCamera(Element::CameraType type) = 0;
+        virtual std::unique_ptr<Camera> createUniqueCamera(ViewType type, ViewDimension dimension) = 0;
 
 		virtual Sprite* createNewSprite() = 0;
 

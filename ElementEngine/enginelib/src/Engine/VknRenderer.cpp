@@ -89,7 +89,7 @@ void Element::VknRenderer::beginFrame()
 void Element::VknRenderer::renderFrame()
 {
 
-    uint32_t imageIndex = swapChain->CurrentImageIndex();
+    uint32_t imageIndex = swapChain->imageIndex();
 
     ImGui::Begin("Light");
     ImGui::SliderInt("Type", &type, 0, 2);
@@ -117,7 +117,7 @@ void Element::VknRenderer::renderFrame()
 
     CheckModels();
     CheckSprites();
-    //if (rebuildCmdBuffers || debugRenderer->isInvalid())
+    //if (rebuildCmdBuffers)
         rebuildCommandBuffers();
 
     m_lightManager->update(imageIndex);
@@ -141,12 +141,12 @@ void Element::VknRenderer::endFrame()
     if (renderStage != RenderStage::PRESENT_READY)
         return;
 
-    if (imagesInFlight[swapChain->CurrentImageIndex()] != VK_NULL_HANDLE) {
-        vkWaitForFences(Device::getVkDevice(), 1, &imagesInFlight[swapChain->CurrentImageIndex()], VK_TRUE, UINT64_MAX);
+    if (imagesInFlight[swapChain->imageIndex()] != VK_NULL_HANDLE) {
+        vkWaitForFences(Device::getVkDevice(), 1, &imagesInFlight[swapChain->imageIndex()], VK_TRUE, UINT64_MAX);
     }
-    imagesInFlight[swapChain->CurrentImageIndex()] = inFlightFences[currentFrame];
+    imagesInFlight[swapChain->imageIndex()] = inFlightFences[currentFrame];
 
-    commandBuffers[swapChain->CurrentImageIndex()]->Submit(graphicsSemaphores[currentFrame], presentSemaphores[currentFrame], inFlightFences[currentFrame]);
+    commandBuffers[swapChain->imageIndex()]->Submit(graphicsSemaphores[currentFrame], presentSemaphores[currentFrame], inFlightFences[currentFrame]);
 
     VkResult result = swapChain->Present(presentSemaphores[currentFrame]);
 
@@ -171,15 +171,21 @@ void Element::VknRenderer::recreateRenderer() {
     cleanupSwapChain();
 
     swapChain->init(window->GetGLFWWindow(), surface);
-    renderPass->init(swapChain.get());
-    m_pipelineManager->regeneratePipelines(swapChain.get(), renderPass.get());
+    auto imageCount = swapChain->getImageCount();
+    renderPass->reInit();
+    m_pipelineManager->regeneratePipelines();
     //camera->setCameraChanged(true);
 
     for (const auto& model : vknModels)
-        model->reInit(swapChain->getImageCount());
+        model->reInit(imageCount);
 
     for (const auto& sprite : vknSprites)
-        sprite->reInit(swapChain->getImageCount());
+        sprite->reInit(imageCount);
+
+    for (const auto& cam : cameras)
+        cam->reInit(imageCount);
+
+    m_lightManager->reInit(imageCount);
 
     CheckModels();
     CheckSprites();
@@ -190,8 +196,8 @@ void Element::VknRenderer::recreateRenderer() {
 
 void Element::VknRenderer::createRenderer() {
 
-    swapChain = std::make_unique<SwapChain>(window->GetGLFWWindow(), surface);
-    renderPass = std::make_unique<RenderPass>(swapChain.get());
+    swapChain = std::make_unique<VknSwapChain>(window->GetGLFWWindow(), surface);
+    renderPass = std::make_unique<VknRenderPass>(swapChain.get());
 
     m_pipelineManager = std::make_unique<PipelineManager>(swapChain.get(), renderPass.get());
 
@@ -216,7 +222,7 @@ void Element::VknRenderer::createRenderer() {
         commandBuffer = std::make_unique<VknCommandBuffer>(graphicsCommandPool.get(), false);
 
     debugRenderer = std::make_unique<DebugRenderer>();
-    debugRenderer->init(renderPass->GetVkRenderPass());
+    debugRenderer->init(swapChain.get(), renderPass.get());
 
     m_lightManager =std::make_unique<LightManager>(
             m_pipelineManager->getPipeline("default"), swapChain->getImageCount());
@@ -291,73 +297,73 @@ void Element::VknRenderer::rebuildCommandBuffers() {
 
         const auto& vkCmdBuffer = commandBuffers[i]->GetVkCommandBuffer();
         renderPass->begin(vkCmdBuffer, static_cast<int>(i));
-
-
+        
         if (!cameras.empty()) {
             for (auto& cam :  cameras) {
                 if(!cam || !cam->isEnabled()) continue;
 
-                cam->setViewportandRect(vkCmdBuffer, windowSize);
+                cam->setViewportAndRect(vkCmdBuffer, windowSize);
 
                 std::vector<VkDescriptorSet> descriptorSets;
-                int j = 0;
-                for (auto &model : vknModels) {
-                    if (!model || model->getEntityState() != EntityState::RENDERED)
-                        continue;
+                if(cam->getViewDimension() == ViewDimension::_3D) {
 
-                    auto pipeline = model->GetPipeline();
-                    m_pipelineManager->BindPipeline(pipeline, vkCmdBuffer);
+                    for (auto &model : vknModels) {
+                        if (!model || model->getEntityState() != EntityState::RENDERED)
+                            continue;
 
-                    descriptorSets =
-                            {cam->getDescriptorSet(pipeline->getName())->getDescriptorSet(i)};
+                        auto pipeline = model->GetPipeline();
+                        m_pipelineManager->BindPipeline(pipeline, vkCmdBuffer);
 
-                    descriptorSets.emplace_back(
-                            m_lightManager->getDescriptorSet(pipeline->getName())->getDescriptorSet(i));
+                        descriptorSets =
+                                {cam->getDescriptorSet(pipeline->getName())->getDescriptorSet(i)};
 
-                    descriptorSets.emplace_back(model->getDescriptorSet()->getDescriptorSet(i));
+                        descriptorSets.emplace_back(
+                                m_lightManager->getDescriptorSet(pipeline->getName())->getDescriptorSet(i));
 
-                    vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                            pipeline->GetVkPipelineLayout(), 0,
-                                            static_cast<uint32_t>(descriptorSets.size()),
-                                            descriptorSets.data(), 0, nullptr);
+                        descriptorSets.emplace_back(model->getDescriptorSet()->getDescriptorSet(i));
 
-                    BindMesh(model->GetMesh(), vkCmdBuffer);
-                    vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(model->GetMesh()->indices.size()), 1, 0, 0, 0);
+                        vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                                pipeline->GetVkPipelineLayout(), 0,
+                                                static_cast<uint32_t>(descriptorSets.size()),
+                                                descriptorSets.data(), 0, nullptr);
 
-                    ++j;
+                        BindMesh(model->GetMesh(), vkCmdBuffer);
+                        model->GetMesh()->draw(vkCmdBuffer);
+                    }
+
+                    debugRenderer->draw3D(vkCmdBuffer, cam->getDescriptorSet("default")->getDescriptorSet(i), i);
                 }
-                j = 0;
+                else if(cam->getViewDimension() == ViewDimension::_2D) {
+                    for (auto &sprite : vknSprites) {
+                        if (!sprite || sprite->getEntityState() != EntityState::RENDERED)
+                            continue;
 
-                for (auto &sprite : vknSprites) {
-                    if (!sprite || sprite->getEntityState() != EntityState::RENDERED)
-                        continue;
+                        auto pipeline = sprite->GetPipeline();
+                        m_pipelineManager->BindPipeline(sprite->GetPipeline(), vkCmdBuffer);
 
-                    auto pipeline = sprite->GetPipeline();
-                    m_pipelineManager->BindPipeline(sprite->GetPipeline(), vkCmdBuffer);
+                        descriptorSets =
+                                {cam->getDescriptorSet(pipeline->getName())->getDescriptorSet(i)};
 
-                    descriptorSets =
-                            {cam->getDescriptorSet(pipeline->getName())->getDescriptorSet(i)};
+                        descriptorSets.emplace_back(
+                                m_lightManager->getDescriptorSet(pipeline->getName())->getDescriptorSet(i));
 
-                    descriptorSets.emplace_back(
-                            m_lightManager->getDescriptorSet(pipeline->getName())->getDescriptorSet(i));
+                        descriptorSets.emplace_back(sprite->getDescriptorSet()->getDescriptorSet(i));
 
-                    descriptorSets.emplace_back(sprite->getDescriptorSet()->getDescriptorSet(i));
+                        vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                                sprite->GetPipeline()->GetVkPipelineLayout(), 0,
+                                                static_cast<uint32_t>(descriptorSets.size()),
+                                                descriptorSets.data(), 0, nullptr);
 
-                    vkCmdBindDescriptorSets(vkCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                            sprite->GetPipeline()->GetVkPipelineLayout(), 0,
-                                            static_cast<uint32_t>(descriptorSets.size()),
-                                            descriptorSets.data(), 0, nullptr);
-                    BindMesh(sprite->GetMesh(), vkCmdBuffer);
-                    vkCmdDrawIndexed(vkCmdBuffer, static_cast<uint32_t>(sprite->GetMesh()->indices.size()), 1, 0, 0, 0);
-                    ++j;
+                        BindMesh(sprite->GetMesh(), vkCmdBuffer);
+                        sprite->GetMesh()->draw(vkCmdBuffer);
+                    }
                 }
 
                 Locator::getResource()->unbindMeshes();
                 m_pipelineManager->UnbindPipelines();
             }
-
         }
-        debugRenderer->draw(vkCmdBuffer);
+        debugRenderer->drawImGUI(vkCmdBuffer);
         renderPass->end(vkCmdBuffer);
 
         commandBuffers[i]->end();
@@ -373,8 +379,7 @@ void Element::VknRenderer::BindMesh(Element::Mesh* mesh, VkCommandBuffer command
         return;
 
     Locator::getResource()->unbindMeshes();
-    VkDeviceSize offsets[] = { 0 };
-    mesh->bind(commandBuffer, offsets);
+    mesh->bind(commandBuffer);
 }
 
 void Element::VknRenderer::createSyncObjects() {
@@ -419,31 +424,39 @@ void Element::VknRenderer::CheckModels()
         if (!model || model->getEntityState() == EntityState::DESTROY)
             continue;
 
-        if (model->isDirty() != DirtyFlags::CLEAN || model->getEntityState() != model->getPrevEntityState())
+        if (model->isDirty() != DirtyFlags::CLEAN || model->getEntityState() != model->getPrevEntityState()) {
             rebuildCmdBuffers = true;
+            break;
+        }
     }
 }
 
 void Element::VknRenderer::CheckSprites()
 {
+    if(rebuildCmdBuffers)
+        return;
+
     for (const auto& sprite: vknSprites)
     {
         if (!sprite || sprite->getEntityState() == EntityState::DESTROY)
             continue;
 
-        if (sprite->isDirty() != DirtyFlags::CLEAN || sprite->getEntityState() != sprite->getPrevEntityState())
+        if (sprite->isDirty() != DirtyFlags::CLEAN || sprite->getEntityState() != sprite->getPrevEntityState()) {
             rebuildCmdBuffers = true;
+            break;
+        }
     }
 }
 
 void Element::VknRenderer::updateUniformBuffers()
 {
-    UniformBufferObject ubo{};
+    auto imageIndex = swapChain->imageIndex();
     for (auto& model : vknModels)
     {
         if (!model)
             continue;
-        model->updateUniformBuffers(ubo, swapChain->CurrentImageIndex());
+
+        model->updateUniformBuffers(imageIndex);
         model->setDirty(DirtyFlags::CLEAN);
         model->setEntityState(model->getEntityState() == EntityState::RENDERED ? EntityState::READY_TO_RENDER : EntityState::NOT_RENDERED);
     }
@@ -453,7 +466,7 @@ void Element::VknRenderer::updateUniformBuffers()
         if (!sprite)
             continue;
 
-        sprite->updateUniformBuffers(ubo, swapChain->CurrentImageIndex());
+        sprite->updateUniformBuffers(imageIndex);
         sprite->setDirty(DirtyFlags::CLEAN);
         sprite->setEntityState(sprite->getEntityState() == EntityState::RENDERED ? EntityState::READY_TO_RENDER : EntityState::NOT_RENDERED);
     }
@@ -477,21 +490,23 @@ Element::Window* Element::VknRenderer::getWindow()
 Element::Model* Element::VknRenderer::createModel()
 {
     auto& model = vknModels.emplace_back();
-    model = std::make_unique<VknModel>(m_pipelineManager->getPipeline("default"), swapChain->getImageCount());
+    model = std::make_unique<VknModel>(m_pipelineManager->getPipeline("default"),
+                                       swapChain->getImageCount());
     return dynamic_cast<Model*>(model.get());
 }
 
 Element::Sprite* Element::VknRenderer::createNewSprite()
 {
     auto& sprite = vknSprites.emplace_back();
-    sprite = std::make_unique<VknSprite>(m_pipelineManager->getDefaultPipeline(), Locator::getResource()->mesh("quad"),
+    sprite = std::make_unique<VknSprite>(m_pipelineManager->getPipeline("default"),
+                                         Locator::getResource()->mesh("quad"),
                                          swapChain->getImageCount());
     return dynamic_cast<Sprite*>(sprite.get());
 }
 
-Element::Camera* Element::VknRenderer::createCamera(Element::CameraType type)
+Element::Camera* Element::VknRenderer::createCamera(Element::ViewType type, ViewDimension dimension)
 {
-    auto camera = new EleCamera(type, m_pipelineManager->getPipeline("default"),
+    auto camera = new EleCamera(type, dimension, m_pipelineManager->getPipeline("default"),
                                               swapChain->getImageCount());
 
     addCamera(camera, -1);
@@ -536,8 +551,8 @@ void Element::VknRenderer::addCamera(Element::Camera *_camera, int element)
         cameras[element] = c;
 }
 
-std::unique_ptr<Element::Camera> Element::VknRenderer::createUniqueCamera(Element::CameraType type) {
-    auto camera = std::make_unique<EleCamera>(type, m_pipelineManager->getPipeline("default"),
+std::unique_ptr<Element::Camera> Element::VknRenderer::createUniqueCamera(Element::ViewType type, ViewDimension dimension) {
+    auto camera = std::make_unique<EleCamera>(type, dimension, m_pipelineManager->getPipeline("default"),
                                                 swapChain->getImageCount());
 
     addCamera(camera.get(), -1);

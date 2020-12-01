@@ -8,21 +8,24 @@
 #include <memory>
 
 namespace Element {
-	class RenderPass
+
+	class VknRenderPass
 	{
 
 	public:
 
-		RenderPass() = default;
-		RenderPass(VkFormat imageFormat);
-		RenderPass(SwapChain* swapChain);
-		~RenderPass();
+		VknRenderPass() = default;
+		VknRenderPass(VkFormat imageFormat);
+		VknRenderPass(VknSwapChain* swapChain);
+		~VknRenderPass();
 
-		void init(SwapChain* swapChain);
+		void init(VknSwapChain* swapChain);
 
 		void createVkRenderPass();
 		void createFrameBuffers();
 		void Destroy();
+		void flush();
+		void reInit();
 
 		VkRenderPass GetVkRenderPass();
 
@@ -35,7 +38,7 @@ namespace Element {
 
 		VkRenderPass m_vkRenderPass;
 		std::unique_ptr<FrameBuffers> m_frameBuffers;
-		SwapChain* m_swapChain;
+		VknSwapChain* m_swapChain;
 
 		Vec3 m_clearColour = Vec3(0.0f, 0.3f, 0.8f);
 

@@ -37,6 +37,11 @@ namespace Element {
 
         VkDescriptorType getDescriptorTypeFromUsage(VkImageUsageFlags imageUsage);
 
+        VkCullModeFlagBits getCullModeFlags(PipelineCulling cullMode);
+
+        VkPolygonMode getPolygonMode(PipelinePolygonMode polygonMode);
+
+
 	};
 }
 

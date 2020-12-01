@@ -10,19 +10,20 @@
 
 #include <stdexcept>
 
-Element::VknPipeline::VknPipeline(SwapChain* swapChain, RenderPass* renderPass, const std::string& name, const PipelineData& pipelineInfo) :
+Element::VknPipeline::VknPipeline(VknSwapChain* swapChain, VknRenderPass* renderPass, const std::string& name, const PipelineData& pipelineInfo) :
 m_swapChain(swapChain), m_renderPass(renderPass), name(name), m_pipelineData(pipelineInfo)
 {
     ShaderInfo shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
-                             "defaultLighting", 0, 0};
+                             m_pipelineData.shaderInfo[0].shader, 0, 0};
     m_pipelineData.shaderInfo.emplace(m_pipelineData.shaderInfo.cbegin(), shaderInfo);
-    shaderInfo = {BindObjectType::STATIC_STORAGE_BUFFER, ShaderType::FRAGMENT,
-                  "defaultLighting", 1, 0 };
-    m_pipelineData.shaderInfo.emplace(m_pipelineData.shaderInfo.cbegin(), shaderInfo);
-    shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
-                  "defaultLighting", 1, 1 };
-    m_pipelineData.shaderInfo.emplace(m_pipelineData.shaderInfo.cbegin(), shaderInfo);
-
+    if(m_pipelineData.lightingEnabled) {
+        shaderInfo = {BindObjectType::STATIC_STORAGE_BUFFER, ShaderType::FRAGMENT,
+                      m_pipelineData.shaderInfo[0].shader, 1, 0};
+        m_pipelineData.shaderInfo.emplace(m_pipelineData.shaderInfo.cbegin(), shaderInfo);
+        shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
+                      m_pipelineData.shaderInfo[0].shader, 1, 1};
+        m_pipelineData.shaderInfo.emplace(m_pipelineData.shaderInfo.cbegin(), shaderInfo);
+    }
     int numberOfSets = 0;
 
     for (const auto& shaderInfo : m_pipelineData.shaderInfo) {
@@ -55,6 +56,8 @@ Element::VknPipeline::~VknPipeline()
 {
     shaderStages.clear();
     bindingsData.clear();
+    m_swapChain = nullptr;
+    m_renderPass = nullptr;
 }
 
 void Element::VknPipeline::init() {
@@ -79,11 +82,9 @@ void Element::VknPipeline::destroy()
         vkDestroyDescriptorSetLayout(logicalDevice, layout, nullptr);
 }
 
-void Element::VknPipeline::reInitVknPipeline(SwapChain* swapChain, RenderPass* renderPass) {
+void Element::VknPipeline::reInitVknPipeline() {
 
     flushed = false;
-    m_swapChain = swapChain;
-    m_renderPass = renderPass;
     createVknPipeline();
 }
 
@@ -98,8 +99,6 @@ void Element::VknPipeline::flush() {
         pool->flush();
     }
     vkDestroyPipeline(logicalDevice, m_vkPipeline, nullptr);
-    m_swapChain = nullptr;
-    m_renderPass = nullptr;
 }
 
 void Element::VknPipeline::bind(VkCommandBuffer vkCommandBuffer)
@@ -200,7 +199,10 @@ void Element::VknPipeline::createVknPipeline() {
     VkPipelineViewportStateCreateInfo viewportState = VkInitializers::pipelineViewportCreateInfo(
             nullptr, 1, nullptr,1);
     VkPipelineRasterizationStateCreateInfo rasterizer = VkInitializers::pipelineRasterizerCreateInfo(
-            VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_POLYGON_MODE_FILL, depthEnabled ? VK_FALSE : VK_TRUE);
+            VkFunctions::getCullModeFlags(m_pipelineData.cullMode),
+            VK_FRONT_FACE_COUNTER_CLOCKWISE,
+            VkFunctions::getPolygonMode(m_pipelineData.polygonMode),
+            depthEnabled ? VK_FALSE : VK_TRUE);
     VkPipelineMultisampleStateCreateInfo multisampling = VkInitializers::pipelineMultisamplerCreateInfo(
             physicalDevice.msaaSamples, VK_FALSE);
     VkPipelineDepthStencilStateCreateInfo depthStencil =VkInitializers::pipelineDepthStencilCreateInfo(

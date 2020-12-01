@@ -20,10 +20,10 @@ namespace Element{
 namespace Element {
     class EleCamera : public Camera {
     public:
-        explicit EleCamera(CameraType _type, VknPipeline* pipeline, uint32_t imageCount);
+        explicit EleCamera(ViewType _type, ViewDimension dimension, VknPipeline* pipeline, uint32_t imageCount);
         ~EleCamera() override;
 
-        void init(CameraType _type, VknPipeline* pipeline, uint32_t imageCount);
+        void init(ViewType _type, ViewDimension dimension, VknPipeline* pipeline, uint32_t imageCount);
         void update(float windowWidth, float windowHeight, uint32_t imageIndex);
         [[nodiscard]] const glm::mat4& getViewMatrix() const;
         [[nodiscard]] const glm::mat4& getProjMatrix() const;
@@ -48,7 +48,7 @@ namespace Element {
 
         void destroy() override;
 
-        void setViewportandRect(VkCommandBuffer vkCmdBuffer, Vec2 windowSize);
+        void setViewportAndRect(VkCommandBuffer vkCmdBuffer, Vec2 windowSize);
 
     private:
 

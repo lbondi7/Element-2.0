@@ -1,41 +1,17 @@
 #include <element/Camera.h>
 #include <element/GameSettings.h>
 
-#include <iostream>
-//
-//Element::Camera::Camera()
-//{
-////    worldUp = { 0.0f, 1.0f, 0.0f };
-////
-////    viewport = { 0, 0, 1, 1 };
-////    rect = { 0, 0, 1, 1 };
-////    zoom = 1.f;
-//}
-//
-//Element::Camera::Camera(CameraType _type) : type(_type)
-//{
-////    type = _type;
-////    transform.setPosition(0.0f, 0.0f, -5.0f);
-////    worldUp = { 0.0f, 1.0f, 0.0f };
-////
-////    viewport = { 0, 0, 1, 1 };
-////    rect = { 0, 0, 1, 1 };
-////    zoom = 1.f;
-////    cameraChanged = true;
-//}
-
-
-const Vec3& Element::Camera::GetForward() const
+const Vec3& Element::Camera::getForward() const
 {
     return forward;
 }
 
-const Vec3& Element::Camera::GetRight() const
+const Vec3& Element::Camera::getRight() const
 {
     return right;
 }
 
-const Vec3& Element::Camera::GetUp() const
+const Vec3& Element::Camera::getUp() const
 {
     return up;
 }
@@ -45,67 +21,32 @@ void Element::Camera::setCameraChanged(bool _cameraChanged)
     cameraChanged = _cameraChanged;
 }
 
-bool Element::Camera::hasCameraChanged()
+bool Element::Camera::hasCameraChanged() const
 {
     return cameraChanged;
 }
 
-float Element::Camera::GetZoom()
+float Element::Camera::getZoom() const
 {
     return zoom;
 }
 
-void Element::Camera::SetZoom(float _zoom)
+void Element::Camera::setZoom(float _zoom)
 {
     zoom = std::min(1000.0f, std::max(0.01f, _zoom));
     cameraChanged = true;
 }
 
-float Element::Camera::GetFOV()
+float Element::Camera::getFOV() const
 {
     return fov;
 }
 
-void Element::Camera::SetFOV(float fov)
+void Element::Camera::setFOV(float _fov)
 {
-    fov = std::min(179.99f, std::max(0.01f, fov));
+    fov = std::min(179.99f, std::max(0.01f, _fov));
     cameraChanged = true;
 }
-
-//void Element::Camera::createDescWritesAndUpdate(float windowWidth, float windowHeight)
-//{
-//    if (!cameraChanged) return;
-//
-////    transformMatrix = glm::translate(glm::mat4(1.0f), transform.getPosition());
-////
-////    transformMatrix = glm::rotate(transformMatrix, glm::radians(transform.getRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
-////    transformMatrix = glm::rotate(transformMatrix, glm::radians(transform.getRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
-////    transformMatrix = glm::rotate(transformMatrix, glm::radians(transform.getRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
-////
-////    inverted = glm::inverse(transformMatrix);
-////    right = normalize(glm::vec3(inverted[0]));
-////    up = normalize(glm::vec3(-inverted[1]));
-////    forward = normalize(glm::vec3(inverted[2]));
-////
-////    lookAtPos = transform.getPosition() + forward;
-////    viewMatrix = glm::lookAt(transform.getPosition(), lookAtPos, up);
-////    auto widthLonger = windowWidth >= windowHeight;
-////    auto aspectRatio = widthLonger ? windowWidth / windowHeight : windowHeight / windowWidth;
-////    if (type == CameraType::PERSPECTIVE)
-////    {
-////        projectionMatrix = glm::perspective(glm::radians(FOV), aspectRatio, 0.1f, 1000.0f);
-////    }
-////    else
-////    {
-////        auto x = (widthLonger ? aspectRatio : 1.0f);
-////        auto y = (widthLonger ? 1.0f : aspectRatio);
-////
-////        projectionMatrix = glm::ortho(-x * zoom, x * zoom, -y * zoom, y * zoom, 0.1f, 1000.0f);
-////    }
-////
-////    //projectionMatrix = glm::ortho(-zoom * windowWidth, windowWidth * zoom, -zoom * windowHeight,  windowHeight * zoom, 0.1f, 1000.0f);
-////    projectionMatrix[1][1] *= -1;
-//}
 
 void Element::Camera::setPos(const Element::Maths::Vec3& position)
 {
@@ -178,17 +119,17 @@ const Element::Maths::Vec3& Element::Camera::getPos() const
     return transform.getPosition();
 }
 
-float Element::Camera::getPosX()
+float Element::Camera::getPosX() const
 {
     return transform.getPositionX();
 }
 
-float Element::Camera::getPosY()
+float Element::Camera::getPosY() const
 {
     return transform.getPositionY();
 }
 
-float Element::Camera::getPosZ()
+float Element::Camera::getPosZ() const
 {
     return transform.getPositionZ();
 }
@@ -198,38 +139,43 @@ const Element::Maths::Vec3& Element::Camera::getRot() const
     return transform.getRotation();
 }
 
-float Element::Camera::getRotX()
+float Element::Camera::getRotX() const
 {
     return transform.getRotationX();
 }
 
-float Element::Camera::getRotY()
+float Element::Camera::getRotY() const
 {
     return transform.getRotationY();
 }
 
-float Element::Camera::getRotZ()
+float Element::Camera::getRotZ() const
 {
     return transform.getRotationZ();
 }
 
-bool Element::Camera::isEnabled() const {
+bool Element::Camera::isEnabled() const
+{
     return enabled;
 }
 
-void Element::Camera::setEnabled(bool _enabled) {
+void Element::Camera::setEnabled(bool _enabled)
+{
     enabled = _enabled;
 }
 
-const Element::Transform &Element::Camera::getTransform() const {
+const Element::Transform &Element::Camera::getTransform() const
+{
     return transform;
 }
 
-void Element::Camera::setTransform(const Element::Transform& _transform) {
-transform = _transform;
+void Element::Camera::setTransform(const Element::Transform& _transform)
+{
+    cameraChanged = true;
+    transform = _transform;
 }
 
-const Vec3 &Element::Camera::GetLookAt() const {
+const Vec3 &Element::Camera::getLookAt() const {
     return lookAtPos;
 }
 
@@ -252,5 +198,33 @@ void Element::Camera::setRect(const Vec4 &_rect)
 void Element::Camera::setViewport(const Vec4 &_viewport)
 {
     viewport = _viewport;
+    cameraChanged = true;
+}
+
+Element::ViewDimension Element::Camera::getViewDimension() const
+{
+    return dimension;
+}
+
+void Element::Camera::setViewDimension(Element::ViewDimension _dimension) {
+    dimension = _dimension;
+    cameraChanged = true;
+}
+
+float Element::Camera::getNearPlane() const {
+    return nearPlane;
+}
+
+void Element::Camera::setNearPlane(float _nearPlane) {
+    nearPlane = _nearPlane;
+    cameraChanged = true;
+}
+
+float Element::Camera::getFarPlane() const {
+    return farPlane;
+}
+
+void Element::Camera::setFarPlane(float _farPlane) {
+    farPlane = _farPlane;
     cameraChanged = true;
 }

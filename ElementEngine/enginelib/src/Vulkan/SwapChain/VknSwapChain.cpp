@@ -7,17 +7,17 @@
 #include <stdexcept>
 
 
-Element::SwapChain::SwapChain(GLFWwindow* window, VkSurfaceKHR surface)
+Element::VknSwapChain::VknSwapChain(GLFWwindow* window, VkSurfaceKHR surface)
 {
     init(window, surface);
 }
 
-Element::SwapChain::~SwapChain()
+Element::VknSwapChain::~VknSwapChain()
 {
     int x = 0;
 }
 
-void Element::SwapChain::init(GLFWwindow* window, VkSurfaceKHR surface)
+void Element::VknSwapChain::init(GLFWwindow* window, VkSurfaceKHR surface)
 {
     createSwapChain(window, surface);
     createImageViews();
@@ -25,42 +25,42 @@ void Element::SwapChain::init(GLFWwindow* window, VkSurfaceKHR surface)
     createDepthImage();
 }
 
-VkSwapchainKHR Element::SwapChain::VkSwapChain()
+VkSwapchainKHR Element::VknSwapChain::VkSwapChain()
 {
     return m_swapChain;
 }
 
-const std::vector<VkImage>& Element::SwapChain::Images()
+const std::vector<VkImage>& Element::VknSwapChain::Images()
 {
     return m_images;
 }
 
-const std::vector<VkImageView>& Element::SwapChain::ImageViews()
+const std::vector<VkImageView>& Element::VknSwapChain::ImageViews()
 {
     return m_imageViews;
 }
 
-VkExtent2D Element::SwapChain::Extent()
+VkExtent2D Element::VknSwapChain::Extent()
 {
     return m_extent;
 }
 
-VkFormat Element::SwapChain::ImageFormat()
+VkFormat Element::VknSwapChain::ImageFormat()
 {
     return m_imageFormat;
 }
 
-uint32_t Element::SwapChain::getImageCount()
+uint32_t Element::VknSwapChain::getImageCount()
 {
     return m_imageCount;
 }
 
-uint32_t& Element::SwapChain::CurrentImageIndex()
+uint32_t Element::VknSwapChain::imageIndex()
 {
     return m_imageIndex;
 }
 
-void Element::SwapChain::Destroy()
+void Element::VknSwapChain::Destroy()
 {
     if(!created)
         return;
@@ -79,13 +79,13 @@ void Element::SwapChain::Destroy()
     vkDestroySwapchainKHR(logicalDevice, m_swapChain, nullptr);
 }
 
-void Element::SwapChain::createSwapChain(GLFWwindow* window, VkSurfaceKHR surface) {
+void Element::VknSwapChain::createSwapChain(GLFWwindow* window, VkSurfaceKHR surface) {
 
     if(created)
         return;
 
     auto logicalDevice = Device::getVkDevice();
-    auto physicalDevice = Device::GetPhysicalDevice()->GetSelectedDevice();
+    auto physicalDevice = Device::GetPhysicalDevice()->GetSelectedDevice(true);
 
     //SwapChainSupportDetails swapChainSupport = Element::VkFunctions::querySwapChainSupport(physicalDevice, surface);
 
@@ -113,7 +113,7 @@ void Element::SwapChain::createSwapChain(GLFWwindow* window, VkSurfaceKHR surfac
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueIndices indices = Element::VkFunctions::findQueueFamilies(physicalDevice.m_physicalDevice, surface);
+    QueueIndices indices = VkFunctions::findQueueFamilies(physicalDevice.m_physicalDevice, surface);
     uint32_t queueFamilyIndices[] = { indices.graphics.value(), indices.present.value() };
 
     if (indices.graphics != indices.present) {
@@ -143,21 +143,22 @@ void Element::SwapChain::createSwapChain(GLFWwindow* window, VkSurfaceKHR surfac
     created = true;
 }
 
-void Element::SwapChain::createImageViews() {
+void Element::VknSwapChain::createImageViews() {
     m_imageViews.resize(m_images.size());
     const auto& logicalDevice = Device::getVkDevice();
     for (uint32_t i = 0; i < m_images.size(); i++) {
-        m_imageViews[i] = Element::VkFunctions::createImageView(logicalDevice, m_images[i], 1, m_imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_imageViews[i] = VkFunctions::createImageView(logicalDevice, m_images[i], 1, m_imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
     }
 }
 
-VkExtent2D Element::SwapChain::chooseSwapExtent(GLFWwindow* window, const VkSurfaceCapabilitiesKHR& capabilities) {
-    if (capabilities.currentExtent.width != UINT32_MAX) {
+VkExtent2D Element::VknSwapChain::chooseSwapExtent(GLFWwindow* window, const VkSurfaceCapabilitiesKHR& capabilities) {
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+
+    if (static_cast<uint32_t>(width) >= UINT32_MAX) {
         return capabilities.currentExtent;
     }
     else {
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
 
         VkExtent2D actualExtent = {
             static_cast<uint32_t>(width),
@@ -171,29 +172,30 @@ VkExtent2D Element::SwapChain::chooseSwapExtent(GLFWwindow* window, const VkSurf
     }
 }
 
-void Element::SwapChain::createDepthImage() {
+void Element::VknSwapChain::createDepthImage() {
 
     m_depthImage.Create(m_extent.width, m_extent.height, 1,
                         Device::GetPhysicalDevice()->GetSelectedDevice().requiredFormats.at("depth"),
                         VK_IMAGE_TILING_OPTIMAL,
                         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Device::GetPhysicalDevice()->GetSelectedDevice().msaaSamples);
-    m_depthImageView = Element::VkFunctions::createImageView(Device::getVkDevice(), m_depthImage.m_vkImage, 1, m_depthImage.m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
+    m_depthImageView = VkFunctions::createImageView(Device::getVkDevice(), m_depthImage.m_vkImage, 1, m_depthImage.m_format, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
-void Element::SwapChain::createColourImage() {
+void Element::VknSwapChain::createColourImage() {
 
     m_colourImage.Create(m_extent.width, m_extent.height, 1, m_imageFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, Device::GetPhysicalDevice()->GetSelectedDevice().msaaSamples);
-    m_colourImageView = Element::VkFunctions::createImageView(Device::getVkDevice(), m_colourImage.m_vkImage, 1, m_colourImage.m_format, VK_IMAGE_ASPECT_COLOR_BIT);
+    m_colourImageView = VkFunctions::createImageView(Device::getVkDevice(), m_colourImage.m_vkImage, 1, m_colourImage.m_format, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
-VkResult Element::SwapChain::AquireNextImage(VkSemaphore& graphicSemaphore, VkFence fence)
+VkResult Element::VknSwapChain::AquireNextImage(VkSemaphore& graphicSemaphore, VkFence fence)
 {
-    vkWaitForFences(Device::getVkDevice(), 1, &fence, VK_TRUE, UINT64_MAX);
+    const auto logicalDevice = Device::getVkDevice();
+    vkWaitForFences(logicalDevice, 1, &fence, VK_TRUE, UINT64_MAX);
 
-    return vkAcquireNextImageKHR(Device::getVkDevice(), m_swapChain, UINT64_MAX, graphicSemaphore, VK_NULL_HANDLE, &m_imageIndex);
+    return vkAcquireNextImageKHR(logicalDevice, m_swapChain, UINT64_MAX, graphicSemaphore, VK_NULL_HANDLE, &m_imageIndex);
 }
 
-VkResult Element::SwapChain::Present(VkSemaphore& presentSemaphore)
+VkResult Element::VknSwapChain::Present(VkSemaphore& presentSemaphore)
 {
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -201,23 +203,14 @@ VkResult Element::SwapChain::Present(VkSemaphore& presentSemaphore)
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = &presentSemaphore;
 
-    VkSwapchainKHR swapChains[] = { m_swapChain };
     presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &m_swapChain ;
+    presentInfo.pSwapchains = &m_swapChain;
 
     presentInfo.pImageIndices = &m_imageIndex;
 
     return vkQueuePresentKHR(Device::GetPresentQueue(), &presentInfo);
 }
 
-//VkFormat Element::SwapChain::findDepthFormat() {
-//    return Element::VkFunctions::findSupportedFormat(Device::GetVkPhysicalDevice(),
-//        { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-//        VK_IMAGE_TILING_OPTIMAL,
-//        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-//    );
-//}
-
-bool Element::SwapChain::isCreated() const {
+bool Element::VknSwapChain::isCreated() const {
     return created;
 }

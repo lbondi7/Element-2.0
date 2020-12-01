@@ -31,7 +31,7 @@ namespace Element {
         DirtyFlags isDirty();
         void setDirty(DirtyFlags flag);
 
-        void updateUniformBuffers(UniformBufferObject &ubo, uint32_t imageIndex);
+        void updateUniformBuffers(uint32_t imageIndex);
         void setEntityState(EntityState state);
         EntityState getEntityState();
         EntityState getPrevEntityState();
@@ -53,6 +53,10 @@ namespace Element {
         VknPipeline* oldPipeline{};
         std::vector<VknBuffer> uniformBuffers;
         DirtyFlags dirty = DirtyFlags::CLEAN;
+
+        glm::mat4 transformMatrix = glm::mat4(1.0f);
+    public:
+        const glm::mat4 &getTransformMatrix() const;
     };
 }
 

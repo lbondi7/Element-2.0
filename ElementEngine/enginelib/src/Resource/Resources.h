@@ -64,6 +64,8 @@ namespace Element {
         Shader* getShader(const std::string& name, Element::ShaderType type,
                           std::map<std::string, std::unique_ptr<Shader>>& shader_map);
 
-        bool LoadMeshData(const char *file, MeshData &meshData);
+        bool LoadMeshData(const char *file, Mesh &mesh);
+
+        bool LoadMeshData(const std::string &file, Mesh &mesh);
     };
 }

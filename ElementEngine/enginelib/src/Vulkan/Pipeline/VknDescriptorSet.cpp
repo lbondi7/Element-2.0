@@ -221,7 +221,6 @@ void Element::VknDescriptorSet::updateImageInfo(Texture* oldTexture, Texture* ne
 
     for (auto& descriptor : descriptors.second)
     {
-
         for (auto& write : descriptor)
         {
             if(write.pImageInfo && write.pImageInfo == &oldTexture->m_image.m_descriptorInfo){

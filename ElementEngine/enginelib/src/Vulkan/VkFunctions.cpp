@@ -36,7 +36,7 @@ uint32_t Element::VkFunctions::GetMemoryType(const VkPhysicalDeviceMemoryPropert
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-QueueIndices Element::VkFunctions::findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
+Element::QueueIndices Element::VkFunctions::findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
     QueueIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -68,7 +68,8 @@ QueueIndices Element::VkFunctions::findQueueFamilies(VkPhysicalDevice physicalDe
     return indices;
 }
 
-QueueIndices Element::VkFunctions::findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, QueueIndices::QueueType queueType) {
+Element::QueueIndices Element::VkFunctions::findQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
+                                                      QueueIndices::QueueType queueType) {
     QueueIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -206,5 +207,22 @@ VkDescriptorType Element::VkFunctions::getDescriptorTypeFromUsage(VkBufferUsageF
 
 
     return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+}
+
+VkCullModeFlagBits Element::VkFunctions::getCullModeFlags(Element::PipelineCulling cullMode) {
+
+    if(cullMode == PipelineCulling::BOTH)
+        return VK_CULL_MODE_FRONT_AND_BACK;
+    else if(cullMode == PipelineCulling::FRONT)
+        return VK_CULL_MODE_FRONT_BIT;
+    else if(cullMode == PipelineCulling::NONE)
+        return VK_CULL_MODE_NONE;
+
+    return VK_CULL_MODE_BACK_BIT;
+}
+
+VkPolygonMode Element::VkFunctions::getPolygonMode(Element::PipelinePolygonMode polygonMode) {
+
+    return static_cast<VkPolygonMode>(polygonMode);
 }
 

@@ -2,7 +2,7 @@
 
 #include <Vulkan/Device/Device.h>
 
-Element::PipelineManager::PipelineManager(SwapChain* swapChain, RenderPass* renderPass) : swapChain(swapChain), renderPass(renderPass)
+Element::PipelineManager::PipelineManager(VknSwapChain* swapChain, VknRenderPass* renderPass) : swapChain(swapChain), renderPass(renderPass)
 {
 	//m_pipelines.emplace("default", std::make_unique<VknPipeline>(swapChain, renderPass, "default", *pipelineData));
 }
@@ -30,12 +30,10 @@ void Element::PipelineManager::flush()
 		pipeline.second->flush();
 }
 
-void Element::PipelineManager::regeneratePipelines(SwapChain* _swapChain, RenderPass* _renderPass)
+void Element::PipelineManager::regeneratePipelines()
 {
-	swapChain = _swapChain;
-	renderPass = _renderPass;
 	for (const auto& pipeline : m_pipelines)
-		pipeline.second->reInitVknPipeline(swapChain, renderPass);
+		pipeline.second->reInitVknPipeline();
 }
 
 void Element::PipelineManager::regeneratePipeline(const std::string name)

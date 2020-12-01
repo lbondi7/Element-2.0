@@ -48,6 +48,8 @@ namespace  Element {
 
         void init(VknPipeline* pipeline, uint32_t imageCount);
 
+        void reInit(uint32_t imageCount);
+
         void update(uint32_t imageIndex);
 
         Light* getLight();

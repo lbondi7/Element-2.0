@@ -27,12 +27,14 @@ namespace Element {
 		PhysicalDevice(VkInstance instance, VkSurfaceKHR surface);
 		~PhysicalDevice();
 
-		const PhysicalDeviceData& GetSelectedDevice();
+		const PhysicalDeviceData& GetSelectedDevice(bool resetSwapChainDetails = false);
 
 		VkSampleCountFlagBits getMaxUsableSampleCount(Element::PhysicalDevice::PhysicalDeviceData& data);
 
 	private:
 
+
+        VkSurfaceKHR surface;
 
 		std::vector<PhysicalDeviceData> m_physicalDevices;
 		PhysicalDeviceData m_selectedPhysicalDevice;

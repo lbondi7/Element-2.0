@@ -43,4 +43,17 @@ namespace Element {
         GEOMETRY = 2,
     };
 
+    enum class PipelinePolygonMode : int {
+        FILL = 0,
+        LINE = 1,
+        POINT = 2,
+    };
+
+    enum class PipelineCulling : int {
+        NONE = 0,
+        FRONT = 1,
+        BACK = 2,
+        BOTH = 3
+    };
+
 }

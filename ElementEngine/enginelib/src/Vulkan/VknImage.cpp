@@ -44,7 +44,7 @@ void Element::VknImage::Create(uint32_t width, uint32_t height, uint32_t mipLeve
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = Element::VkFunctions::findMemoryType(Device::GetVkPhysicalDevice(), memRequirements.memoryTypeBits, properties);
+    allocInfo.memoryTypeIndex = VkFunctions::findMemoryType(Device::GetVkPhysicalDevice(), memRequirements.memoryTypeBits, properties);
 
     if (vkAllocateMemory(logicalDevice, &allocInfo, nullptr, &m_memory) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate image memory!");

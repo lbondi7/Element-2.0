@@ -8,34 +8,32 @@
 
 #include <stdexcept>
 
-Element::RenderPass::RenderPass(VkFormat imageFormat)
+Element::VknRenderPass::VknRenderPass(VkFormat imageFormat)
 {
    // createVkRenderPass(imageFormat);
 }
 
-Element::RenderPass::RenderPass(SwapChain* swapChain)
+Element::VknRenderPass::VknRenderPass(VknSwapChain* swapChain)
 {
     init(swapChain);
 }
 
-Element::RenderPass::~RenderPass()
+Element::VknRenderPass::~VknRenderPass()
 {
     Destroy();
+    m_swapChain = nullptr;
 }
 
-void Element::RenderPass::init(SwapChain* swapChain)
+void Element::VknRenderPass::init(VknSwapChain* swapChain)
 {
     if(created)
         return;
 
     m_swapChain = swapChain;
-
-    createVkRenderPass();
-    createFrameBuffers();
-    created = true;
+    reInit();
 }
 
-void Element::RenderPass::createVkRenderPass() {
+void Element::VknRenderPass::createVkRenderPass() {
 
     const auto& physicalDevice = Device::GetPhysicalDevice()->GetSelectedDevice();
 
@@ -108,34 +106,45 @@ void Element::RenderPass::createVkRenderPass() {
     }
 }
 
-void Element::RenderPass::createFrameBuffers()
+void Element::VknRenderPass::createFrameBuffers()
 {
-    m_frameBuffers = std::make_unique<FrameBuffers>(m_swapChain, m_vkRenderPass);
+    if(!m_frameBuffers)
+        m_frameBuffers = std::make_unique<FrameBuffers>(m_swapChain, m_vkRenderPass);
+    else
+        m_frameBuffers->init(m_swapChain, m_vkRenderPass);
 }
 
-void Element::RenderPass::Destroy()
+void Element::VknRenderPass::Destroy()
 {
     if(!created)
         return;
 
     created = false;
 
-    if(m_vkRenderPass != VK_NULL_HANDLE)
+    if(m_vkRenderPass) {
         vkDestroyRenderPass(Device::getVkDevice(), m_vkRenderPass, nullptr);
-    m_vkRenderPass = VK_NULL_HANDLE;
+        m_vkRenderPass = nullptr;
+    }
     if (m_frameBuffers) {
         m_frameBuffers->Destroy();
-        m_frameBuffers.reset();
     }
-    m_swapChain = nullptr;
+
+//    if(m_vkRenderPass != VK_NULL_HANDLE)
+//        vkDestroyRenderPass(Device::getVkDevice(), m_vkRenderPass, nullptr);
+//    m_vkRenderPass = VK_NULL_HANDLE;
+//    if (m_frameBuffers) {
+//        m_frameBuffers->Destroy();
+//        m_frameBuffers.reset();
+//    }
+//    m_swapChain = nullptr;
 }
 
-VkRenderPass Element::RenderPass::GetVkRenderPass()
+VkRenderPass Element::VknRenderPass::GetVkRenderPass()
 {
     return m_vkRenderPass;
 }
 
-void Element::RenderPass::begin(VkCommandBuffer vkCommandBuffer, int i)
+void Element::VknRenderPass::begin(VkCommandBuffer vkCommandBuffer, int i)
 {
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -160,12 +169,39 @@ void Element::RenderPass::begin(VkCommandBuffer vkCommandBuffer, int i)
     vkCmdBeginRenderPass(vkCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void Element::RenderPass::end(VkCommandBuffer vkCommandBuffer)
+void Element::VknRenderPass::end(VkCommandBuffer vkCommandBuffer)
 {
     vkCmdEndRenderPass(vkCommandBuffer);
 }
 
-void Element::RenderPass::setClearColour(const Vec3& clearColour)
+void Element::VknRenderPass::setClearColour(const Vec3& clearColour)
 {
     m_clearColour = clearColour;
+}
+
+void Element::VknRenderPass::flush() {
+
+    if(!created)
+        return;
+
+    created = false;
+
+    if(m_vkRenderPass) {
+        vkDestroyRenderPass(Device::getVkDevice(), m_vkRenderPass, nullptr);
+        m_vkRenderPass = nullptr;
+    }
+    if (m_frameBuffers) {
+        m_frameBuffers->Destroy();
+    }
+}
+
+void Element::VknRenderPass::reInit() {
+
+    if(created)
+        return;
+
+    createVkRenderPass();
+    createFrameBuffers();
+    created = true;
+
 }

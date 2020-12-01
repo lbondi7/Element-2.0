@@ -74,15 +74,15 @@ namespace Element {
 
 		Sprite* createNewSprite() override;
 
-		Camera* createCamera(Element::CameraType type) override;
+		Camera* createCamera(ViewType type, ViewDimension dimension) override;
 
-        std::unique_ptr<Camera> createUniqueCamera(Element::CameraType type) override;
+        std::unique_ptr<Camera> createUniqueCamera(ViewType type, ViewDimension dimension) override;
 
 		void setClearColour(const Vec3& clearCol) override;
 
 		void setClearColourNormalised(const Vec3& clearCol) override;
 
-        void addCamera(Element::Camera *_camera, int element) override;
+        void addCamera(Camera *_camera, int element) override;
 
 	private:
 		const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -90,8 +90,8 @@ namespace Element {
 		std::unique_ptr<Instance> instance;
 		VkSurfaceKHR surface;
 
-		std::unique_ptr<SwapChain> swapChain;
-		std::unique_ptr<RenderPass> renderPass;
+		std::unique_ptr<VknSwapChain> swapChain;
+		std::unique_ptr<VknRenderPass> renderPass;
 		std::unique_ptr<PipelineManager> m_pipelineManager;
 		std::unique_ptr<VknCommandPool> graphicsCommandPool;
 
@@ -125,7 +125,5 @@ namespace Element {
         float intensity = 1.0f;
         float cutOff = 12.5;
         float outerCutOff = 15.0f;
-
-        void rebuildCommandBuffersTemp();
     };
 }

@@ -4,6 +4,7 @@
 
 #include <Vulkan/VknBuffer.h>
 #include <Vulkan/Pipeline/VknDescriptorSet.h>
+#include <Physics/Collider/BoxCollider.h>
 
 namespace Element {
 
@@ -42,7 +43,7 @@ namespace Element {
 //        void updateUniformBuffers(const glm::mat4 &viewMatrix, const glm::mat4 &projMatrix,
 //                                  uint32_t imageIndex);
 
-        void updateUniformBuffers(UniformBufferObject &ubo, uint32_t imageIndex);
+        void updateUniformBuffers(uint32_t imageIndex);
 
         void setEntityState(EntityState state);
 
@@ -58,6 +59,9 @@ namespace Element {
 
         [[nodiscard]] VknDescriptorSet* getDescriptorSet() const;
 
+        [[nodiscard]] const glm::mat4& getTransformMatrix() const;
+
+        BoxCollider* collider;
     private:
         std::vector<void*> data;
         std::vector<VknBuffer> uniformBuffers;
@@ -68,5 +72,7 @@ namespace Element {
 
         VknPipeline *oldPipeline;
         DirtyFlags dirty = DirtyFlags::CLEAN;
+
+        glm::mat4 transformMatrix = glm::mat4(1.0f);
     };
 }

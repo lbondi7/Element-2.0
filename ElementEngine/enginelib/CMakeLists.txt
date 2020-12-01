@@ -116,7 +116,14 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Lighting/LightManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Lighting/LightManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Maths/Vec4.cpp
-    src/Vulkan/Allocator/Allocator.cpp src/Vulkan/Allocator/Allocator.h src/Vulkan/Allocator/MemoryAllocator.cpp src/Vulkan/Allocator/MemoryAllocator.h src/Vulkan/Allocator/BufferAllocator.cpp src/Vulkan/Allocator/BufferAllocator.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Allocator/Allocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Allocator/Allocator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Allocator/MemoryAllocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Allocator/MemoryAllocator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Allocator/BufferAllocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Allocator/BufferAllocator.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Physics/Collider/BoxCollider.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Physics/Collider/BoxCollider.h src/Physics/Physics.cpp src/Physics/Physics.h)
 
 #target_include_directories(
 #    ${PROJECT_NAME} SYSTEM PUBLIC

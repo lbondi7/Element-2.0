@@ -1,0 +1,7 @@
+
+C:\Users\lbondi7\CLionProjects\Element-2.0\ElementEngine\cmake-build-release\app\resources\shaders>C:\VulkanSDK\1.2.148.1\Bin32\glslc.exe shader3.vert -o shader3.vert.spv 
+
+C:\Users\lbondi7\CLionProjects\Element-2.0\ElementEngine\cmake-build-release\app\resources\shaders>C:\VulkanSDK\1.2.148.1\Bin32\glslc.exe shader3.frag -o shader3.frag.spv 
+
+C:\Users\lbondi7\CLionProjects\Element-2.0\ElementEngine\cmake-build-release\app\resources\shaders>pause
+Press any key to continue . . . 

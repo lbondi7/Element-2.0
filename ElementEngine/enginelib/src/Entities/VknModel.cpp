@@ -5,6 +5,8 @@
 
 #include <element/Debugger.h>
 
+#include <Physics/Physics.h>
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
@@ -94,33 +96,15 @@ std::vector<Element::VknBuffer>& Element::VknModel::GetUniformBuffers() noexcept
 	return uniformBuffers;
 }
 
-DirtyFlags Element::VknModel::isDirty()
+Element::DirtyFlags Element::VknModel::isDirty()
 {
 	return dirty;
 }
 
-void Element::VknModel::setDirty(DirtyFlags flag)
+void Element::VknModel::setDirty(Element::DirtyFlags flag)
 {
 	dirty = flag;
 }
-
-//void Element::VknModel::updateUniformBuffers(const glm::mat4& viewMatrix, const glm::mat4& projMatrix,uint32_t imageIndex)
-//{
-//
-//	if (!transform.isUpdated())
-//		return;
-//
-//	UniformBufferObject ubo{};
-//	auto pos = Utilities::vec3RefToGlmvec3(transform.getPosition());
-//	pos.y *= -1;
-//	ubo.model = glm::translate(ubo.model, pos);
-//	ubo.model *= glm::yawPitchRoll(transform.getRotation().y, transform.getRotation().x, transform.getRotation().z);
-//	ubo.model = glm::scale(ubo.model, Utilities::vec3RefToGlmvec3(transform.getScale()));
-////	ubo.view = viewMatrix;
-////	ubo.proj = projMatrix;
-//
-//	uniformBuffers[imageIndex].CopyMemory(&ubo, sizeof(ubo));
-//}
 
 void Element::VknModel::setEntityState(EntityState state)
 {
@@ -188,6 +172,10 @@ void Element::VknModel::init(VknPipeline* _pipeline, uint32_t imageCount)
 	descriptorSet->addData(texture, 1);
 	descriptorSet->addData(Locator::getResource()->material("test")->uniformBuffers.data(), 2);
 	descriptorSet->createDescWritesAndUpdate();
+
+	collider = Physics::get().getCollider(&transformMatrix);
+	collider->transform.setPositionX(-2.f);
+
 }
 
 void Element::VknModel::reInit(uint32_t imageCount)
@@ -197,29 +185,29 @@ void Element::VknModel::reInit(uint32_t imageCount)
     descriptorSet->init(descriptorSet->getPipeline(), imageCount, descriptorSet->getId());
     descriptorSet->createDescWritesAndUpdate();
 
-//  descriptorSet = std::make_unique<DescriptorSet>();
-//	descriptorSet->flush();
-//	descriptorSet->init(pipeline, imageCount, 2);
-//    //std::vector<void*>data{uniformBuffers.data(), texture};
-//	descriptorSet->createDescWritesAndUpdate();
-
 	dirty = DirtyFlags::DIRTY;
 }
 
-void Element::VknModel::updateUniformBuffers(UniformBufferObject &ubo, uint32_t imageIndex) {
+void Element::VknModel::updateUniformBuffers(uint32_t imageIndex) {
 
     if (!transform.isUpdated())
         return;
 
     auto pos = Utilities::vec3RefToGlmvec3(transform.getPosition());
     pos.y *= -1;
-    ubo.model = glm::translate(ubo.model, pos);
-    ubo.model *= glm::yawPitchRoll(transform.getRotation().y, transform.getRotation().x, transform.getRotation().z);
-    ubo.model = glm::scale(ubo.model, Utilities::vec3RefToGlmvec3(transform.getScale()));
+    transformMatrix = glm::translate(glm::identity<glm::mat4>(), pos);
+    transformMatrix *= glm::yawPitchRoll(transform.getRotation().y, transform.getRotation().x, transform.getRotation().z);
+    transformMatrix = glm::scale(transformMatrix, Utilities::vec3RefToGlmvec3(transform.getScale()));
+    uniformBuffers[imageIndex].MapCopyMemory2(&transformMatrix);
 
-    uniformBuffers[imageIndex].MapCopyMemory2(&ubo);
+    if(collider)
+        collider->update(imageIndex);
 }
 
 Element::VknDescriptorSet *Element::VknModel::getDescriptorSet() const {
     return descriptorSet.get();
+}
+
+const glm::mat4 &Element::VknModel::getTransformMatrix() const {
+    return transformMatrix;
 }

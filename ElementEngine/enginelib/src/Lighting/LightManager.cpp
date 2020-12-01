@@ -43,6 +43,14 @@ void Element::LightManager::init(Element::VknPipeline *pipeline, uint32_t imageC
     addDescriptorSet(pipeline, imageCount);
 }
 
+void Element::LightManager::reInit(uint32_t imageCount) {
+
+    for (auto& descriptor : descriptorSets){
+        descriptor.second->init(descriptor.second->getPipeline(), imageCount, descriptor.second->getId());
+        descriptor.second->createDescWritesAndUpdate();
+    }
+}
+
 
 void Element::LightManager::update(uint32_t imageIndex){
 

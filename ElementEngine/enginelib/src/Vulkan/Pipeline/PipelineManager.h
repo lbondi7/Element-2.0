@@ -15,14 +15,14 @@ namespace Element {
 	class PipelineManager
 	{
 	public:
-		PipelineManager(SwapChain* _swapChain, RenderPass* _renderPass);
+		PipelineManager(VknSwapChain* _swapChain, VknRenderPass* _renderPass);
 		~PipelineManager();
 
 		void destroy();
 
 		void flush();
 
-		void regeneratePipelines(SwapChain* _swapChain, RenderPass* _renderPass);
+		void regeneratePipelines();
 
 		void regeneratePipeline(const std::string name);
 
@@ -38,8 +38,8 @@ namespace Element {
 
 	private:
 
-		SwapChain* swapChain;
-		RenderPass* renderPass;
+		VknSwapChain* swapChain;
+		VknRenderPass* renderPass;
 
 		std::map<std::string, std::unique_ptr<VknPipeline>> m_pipelines;
 		std::unique_ptr<VknPipeline> m_defaultPipeline;

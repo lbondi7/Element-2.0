@@ -10,10 +10,15 @@ namespace Element {
 
     class VknPipeline;
 
-	enum class CameraType : int {
+	enum class ViewType : int {
 		PERSPECTIVE ,
 		ORTHOGRAPHIC  = 1
 	};
+
+    enum class ViewDimension : int {
+        _3D = 0,
+        _2D = 1
+    };
 
 	class Camera : public Entity
 	{
@@ -24,56 +29,66 @@ namespace Element {
         //Camera(CameraType _type, VknPipeline* pipeline, uint32_t imageCount);
 		virtual ~Camera() = default;
 
-		[[nodiscard]] const Vec3& GetLookAt() const;
-		[[nodiscard]] const Vec3& GetForward() const;
-		[[nodiscard]] const Vec3& GetRight() const;
-		[[nodiscard]] const Vec3& GetUp() const;
-		float GetZoom();
-		float GetFOV();
-		bool hasCameraChanged();
+		[[nodiscard]] const Vec3& getLookAt() const;
+		[[nodiscard]] const Vec3& getForward() const;
+		[[nodiscard]] const Vec3& getRight() const;
+		[[nodiscard]] const Vec3& getUp() const;
+		[[nodiscard]] float getZoom() const;
+		[[nodiscard]] float getFOV() const;
+		[[nodiscard]] bool hasCameraChanged() const;
 
-		void SetZoom(float _zoom);
-		void SetFOV(float fov);
-		void setCameraChanged(bool _cameraUpdated);
+		[[maybe_unused]] void setZoom(float _zoom);
+		[[maybe_unused]] void setFOV(float fov);
+		[[maybe_unused]] void setCameraChanged(bool _cameraUpdated);
 
-		[[nodiscard]] const Element::Transform& getTransform() const;
-        void setTransform(const Element::Transform& _transform);
+		[[nodiscard]] const Transform& getTransform() const;
+        [[maybe_unused]] void setTransform(const Transform& _transform);
 
+		[[maybe_unused]] void setPos(const Vec3& position);
+		[[maybe_unused]] void setPos(float x, float y, float z);
+		[[maybe_unused]] void setPos(float position);
+		[[maybe_unused]] void setPosX(float x);
+		[[maybe_unused]] void setPosY(float y);
+		[[maybe_unused]] void setPosZ(float z);
 
-		void setPos(const Vec3& position);
-		void setPos(float x, float y, float z);
-		void setPos(float position);
-		void setPosX(float x);
-		void setPosY(float y);
-		void setPosZ(float z);
-
-		void setRot(const Vec3& rotation);
-		void setRot(float x, float y, float z);
-		void setRotX(float x);
-		void setRotY(float y);
-		void setRotZ(float z);
+		[[maybe_unused]] void setRot(const Vec3& rotation);
+		[[maybe_unused]] void setRot(float x, float y, float z);
+		[[maybe_unused]] void setRotX(float x);
+		[[maybe_unused]] void setRotY(float y);
+		[[maybe_unused]] void setRotZ(float z);
 
         [[nodiscard]] const Vec3& getPos() const;
-		float getPosX();
-		float getPosY();
-		float getPosZ();
+        [[nodiscard]] float getPosX() const;
+        [[nodiscard]] float getPosY() const;
+        [[nodiscard]] float getPosZ() const;
 
         [[nodiscard]] const Vec3& getRot() const;
-		float getRotX();
-		float getRotY();
-		float getRotZ();
+		[[nodiscard]] float getRotX() const;
+		[[nodiscard]] float getRotY() const;
+		[[nodiscard]] float getRotZ() const;
 
         [[nodiscard]] const Vec4& getViewport() const;
         [[nodiscard]] const Vec4& getRect() const;
-        void setRect(const Vec4 &_rect);
-        void setViewport(const Vec4 &_viewport);
+        [[maybe_unused]] void setRect(const Vec4 &_rect);
+        [[maybe_unused]] void setViewport(const Vec4 &_viewport);
 
-		bool isEnabled() const;
+		[[nodiscard]] bool isEnabled() const;
 		void setEnabled(bool _enabled);
+
+		[[nodiscard]] ViewDimension getViewDimension() const;
+		[[maybe_unused]] void setViewDimension(ViewDimension _dimension);
+
+        float getNearPlane() const;
+        void setNearPlane(float nearPlane);
+
+        float getFarPlane() const;
+        void setFarPlane(float farPlane);
+
 
 	protected:
 
-		CameraType type;
+		ViewType type;
+		ViewDimension dimension;
 		Transform transform;
 		Vec3 lookAtPos;
 		Vec3 worldUp;
@@ -84,7 +99,9 @@ namespace Element {
         Vec4 rect;
 		float zoom  = 1.0f;
 		float fov  = 60.0f;
-		bool cameraChanged  = false;
+		float nearPlane = 0.0f;
+		float farPlane = 1000.0f;
+        bool cameraChanged  = false;
 		bool enabled = false;
 	};
 }

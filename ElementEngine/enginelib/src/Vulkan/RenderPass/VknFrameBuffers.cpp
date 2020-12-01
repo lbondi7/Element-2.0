@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-Element::FrameBuffers::FrameBuffers(SwapChain* swapChain, VkRenderPass vkRenderPass)
+Element::FrameBuffers::FrameBuffers(VknSwapChain* swapChain, VkRenderPass vkRenderPass)
 {
     init(swapChain, vkRenderPass);
 }
@@ -13,7 +13,7 @@ Element::FrameBuffers::~FrameBuffers()
 {
 }
 
-void Element::FrameBuffers::init(SwapChain* swapChain, VkRenderPass vkRenderPass){
+void Element::FrameBuffers::init(VknSwapChain* swapChain, VkRenderPass vkRenderPass){
 
     m_vkFrameBuffers.resize(swapChain->getImageCount());
     const auto& samples = Device::GetPhysicalDevice()->GetSelectedDevice().msaaSamples;

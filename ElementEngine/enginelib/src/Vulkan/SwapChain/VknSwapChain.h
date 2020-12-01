@@ -7,13 +7,13 @@ struct GLFWwindow;
 
 namespace Element {
 
-    struct SwapChain
+    class VknSwapChain
     {
     public:
 
-        SwapChain() = default;
-        SwapChain(GLFWwindow* window, VkSurfaceKHR surface);
-        ~SwapChain();
+        VknSwapChain() = default;
+        VknSwapChain(GLFWwindow* window, VkSurfaceKHR surface);
+        ~VknSwapChain();
 
         void init(GLFWwindow* window, VkSurfaceKHR surface);
 
@@ -31,7 +31,7 @@ namespace Element {
         VkExtent2D Extent();
         VkFormat ImageFormat();
         uint32_t getImageCount();
-        uint32_t& CurrentImageIndex();
+        uint32_t imageIndex();
 
 //        void DestroyDepthResource();
 //

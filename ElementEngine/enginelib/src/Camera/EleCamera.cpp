@@ -8,6 +8,7 @@
 #include <element/Debugger.h>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 //#include <algorithm>
 struct CamConst{
@@ -17,41 +18,24 @@ struct CamConst{
     float padding;
 };
 
-
-//Element::EleCamera::EleCamera(Element::CameraType _type) {
-//    type = _type;
-//    transform.setPosition(0.0f, 0.0f, -5.0f);
-//    worldUp = Vec3( 0.0f, 1.0f, 0.0f );
-//
-//    viewport = Vec4(0, 0, 1, 1 );
-//    rect = Vec4( 0, 0, 1, 1 );
-//    zoom = 1.f;
-//    cameraChanged = true;
-//
-//    uniformBuffers.resize(3);
-//    for (auto& buffer : uniformBuffers)
-//    {
-//        buffer.Create(sizeof(CamConst), 0, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-//        buffer.Map();
-//    }
-//}
-
-
-Element::EleCamera::EleCamera(CameraType _type, VknPipeline* pipeline, uint32_t imageCount)
+Element::EleCamera::EleCamera(ViewType _type, ViewDimension dimension, VknPipeline* pipeline, uint32_t imageCount)
 {
-    init(_type, pipeline, imageCount);
+    init(_type, dimension, pipeline, imageCount);
 }
 
-void Element::EleCamera::init(Element::CameraType _type, Element::VknPipeline *pipeline, uint32_t imageCount) {
+void Element::EleCamera::init(Element::ViewType _type, ViewDimension _dimension, Element::VknPipeline *pipeline,
+                              uint32_t imageCount) {
     type = _type;
-    transform.setPosition(0.0f, 0.0f, -5.0f);
+    dimension = _dimension;
+    transform.setPosition(0.0f, 0.0f, -1.0f);
     worldUp = Vec3( 0.0f, 1.0f, 0.0f );
 
     viewport = Vec4(0, 0, 1, 1 );
     rect = Vec4(0, 0, 1, 1 );
     zoom = 1.f;
+    nearPlane = type == ViewType::PERSPECTIVE ? 0.1f : 0.0f;
+    farPlane = 1000.0f;
     cameraChanged = true;
-
     enabled = true;
 
     uniformBuffers.resize(imageCount);
@@ -87,11 +71,12 @@ void Element::EleCamera::update(float windowWidth, float windowHeight, uint32_t 
 {
     if (!cameraChanged) return;
 
-    transformMatrix = glm::translate(glm::mat4(1.0f), Utilities::vec3RefToGlmvec3(transform.getPosition()));
+    transformMatrix = glm::translate(glm::mat4(1.0f),
+                                     Utilities::vec3RefToGlmvec3(transform.getPosition()));
 
-    transformMatrix = glm::rotate(transformMatrix, glm::radians(transform.getRotation().x), glm::vec3(1.0f, 0.0f, 0.0f));
-    transformMatrix = glm::rotate(transformMatrix, glm::radians(transform.getRotation().y), glm::vec3(0.0f, 1.0f, 0.0f));
-    transformMatrix = glm::rotate(transformMatrix, glm::radians(transform.getRotation().z), glm::vec3(0.0f, 0.0f, 1.0f));
+    transformMatrix *= glm::yawPitchRoll(glm::radians(transform.getRotation().y),
+                                         glm::radians(transform.getRotation().x),
+                                         glm::radians(transform.getRotation().z));
 
     inverted = glm::inverse(transformMatrix);
     right = Utilities::glmvec3RefToVec3(normalize(glm::vec3(inverted[0])));
@@ -105,21 +90,24 @@ void Element::EleCamera::update(float windowWidth, float windowHeight, uint32_t 
 
     auto widthLonger = windowWidth >= windowHeight;
     auto aspectRatio = widthLonger ? windowWidth / windowHeight : windowHeight / windowWidth;
-    if (type == CameraType::PERSPECTIVE)
+    if (type == ViewType::PERSPECTIVE)
     {
-        projectionMatrix = glm::perspective(glm::radians(fov), aspectRatio, 0.1f, 1000.0f);
+            projectionMatrix =
+                    glm::perspective(glm::radians(fov),
+                                     aspectRatio,
+                                     nearPlane, farPlane);
     }
     else
     {
-        auto x = (widthLonger ? aspectRatio : 1.0f);
-        auto y = (widthLonger ? 1.0f : aspectRatio);
+        auto x = dimension == ViewDimension::_3D ? (widthLonger ? aspectRatio : 1.0f) : windowWidth;
+        auto y = dimension == ViewDimension::_3D ? (widthLonger ? 1.0f : aspectRatio) : windowHeight;
 
-        projectionMatrix = glm::ortho(-x * zoom, x * zoom, -y * zoom, y * zoom, 0.1f, 1000.0f);
+        projectionMatrix = glm::ortho(-x * zoom, x * zoom,
+                           -y * zoom, y * zoom,
+                           nearPlane, farPlane);
     }
 
-    //projectionMatrix = glm::ortho(-zoom * windowWidth, windowWidth * zoom, -zoom * windowHeight,  windowHeight * zoom, 0.1f, 1000.0f);
     projectionMatrix[1][1] *= -1;
-
 
     CamConst camUBO{};
     camUBO.view = viewMatrix;
@@ -197,7 +185,7 @@ void Element::EleCamera::destroy() {
     destroyed = true;
 }
 
-void Element::EleCamera::setViewportandRect(VkCommandBuffer vkCmdBuffer, Vec2 windowSize) {
+void Element::EleCamera::setViewportAndRect(VkCommandBuffer vkCmdBuffer, Vec2 windowSize) {
 
 
     vkViewport.minDepth = 0.0f;
@@ -211,6 +199,8 @@ void Element::EleCamera::setViewportandRect(VkCommandBuffer vkCmdBuffer, Vec2 wi
                           static_cast<int>(rect.y * windowSize.y)};
     scissorRect.extent = {static_cast<uint32_t>(rect.z * windowSize.x),
                           static_cast<uint32_t>(rect.w * windowSize.y)};
+//    Debugger::get().log(static_cast<float>(scissorRect.extent.width));
+//    Debugger::get().log(static_cast<float>(scissorRect.extent.height));
     vkCmdSetViewport(vkCmdBuffer, 0, 1, &vkViewport);
     vkCmdSetScissor(vkCmdBuffer, 0, 1, &scissorRect);
 

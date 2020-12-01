@@ -21,7 +21,6 @@ private:
 
 	std::vector<Object> objects;
 	std::unique_ptr<Element::Camera> camera;
-    std::unique_ptr<Element::Camera> camerab;
 	Element::Sprite* sprite;
 	float timeCount = 0.0f;
 

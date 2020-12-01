@@ -96,7 +96,7 @@ VkQueue Element::LogicalDevice::GetTransferQueue()
     return transferQueue;
 }
 
-QueueIndices Element::LogicalDevice::GetQueueIndices()
+Element::QueueIndices Element::LogicalDevice::GetQueueIndices()
 {
     return queueIndices;
 }

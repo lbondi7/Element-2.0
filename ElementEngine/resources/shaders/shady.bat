@@ -1,0 +1,1 @@
+shader3.bat 1>output.txt 2>errors.txt

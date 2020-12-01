@@ -15,7 +15,9 @@ struct PipelineData {
     std::vector<ShaderInfo> shaderInfo;
 
     bool depthEnabled = GameSettings::get().depthEnabled;
-    int Topology = 0;
+    PipelinePolygonMode polygonMode = PipelinePolygonMode::FILL;
+    PipelineCulling cullMode = PipelineCulling::BACK;
+    bool lightingEnabled = true;
 
     bool operator==(const PipelineData& other) const = default;
     PipelineData& operator=(const PipelineData& other) = default;

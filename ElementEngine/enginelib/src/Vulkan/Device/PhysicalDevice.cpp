@@ -10,8 +10,9 @@ const std::vector<const char*> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 
-Element::PhysicalDevice::PhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
+Element::PhysicalDevice::PhysicalDevice(VkInstance instance, VkSurfaceKHR _surface)
 {
+    surface = _surface;
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -51,8 +52,14 @@ Element::PhysicalDevice::~PhysicalDevice()
 {
 }
 
-const Element::PhysicalDevice::PhysicalDeviceData& Element::PhysicalDevice::GetSelectedDevice()
+const Element::PhysicalDevice::PhysicalDeviceData& Element::PhysicalDevice::GetSelectedDevice(
+        bool resetSwapChainDetails)
 {
+    if(resetSwapChainDetails) {
+        m_selectedPhysicalDevice.swapChainSupport = querySwapChainSupport(
+                m_selectedPhysicalDevice.m_physicalDevice, surface);
+    }
+
     return m_selectedPhysicalDevice;
 
 }
@@ -203,7 +210,8 @@ std::vector<VkFormat>&
 //    throw std::runtime_error("failed to find supported format!");
 }
 
-SwapChainSupportDetails Element::PhysicalDevice::querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) {
+Element::SwapChainSupportDetails Element::PhysicalDevice::querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR
+surface) {
     SwapChainSupportDetails details;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);

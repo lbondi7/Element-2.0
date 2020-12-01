@@ -9,11 +9,11 @@ namespace Element {
 	{
 	public:
 
-		FrameBuffers(SwapChain* swapChain, VkRenderPass vkRenderPass);
+		FrameBuffers(VknSwapChain* swapChain, VkRenderPass vkRenderPass);
 
 		~FrameBuffers();
 
-		void init(SwapChain* swapChain, VkRenderPass vkRenderPass);
+		void init(VknSwapChain* swapChain, VkRenderPass vkRenderPass);
 
 		void Destroy();
 

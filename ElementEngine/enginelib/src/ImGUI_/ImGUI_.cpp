@@ -33,7 +33,6 @@ void Element::ImGUI::init()
 }
 
 void Element::ImGUI::initResources(VkRenderPass renderPass)
-
 {
 	if (!started) return;
 
@@ -51,7 +50,8 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
                VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	fontView = Element::VkFunctions::createImageView(logicalDevice, fImage.m_vkImage, 1, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+	fontView = VkFunctions::createImageView(logicalDevice, fImage.m_vkImage, 1,
+                                         VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 
 	// Staging buffers for font data upload
 	VknBuffer stagingBuffer;
@@ -61,14 +61,15 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	stagingBuffer.MapCopyMemory(fontData);
 
 	fImage.transitionLayout(VK_FORMAT_R8G8B8A8_SRGB, 1, VK_IMAGE_LAYOUT_UNDEFINED,
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_HOST_BIT,
-		VK_PIPELINE_STAGE_TRANSFER_BIT);
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
+		VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 
 	fImage.CopyFromBuffer(stagingBuffer.m_buffer, texWidth, texHeight);
 
 	fImage.transitionLayout(VK_FORMAT_R8G8B8A8_SRGB, 1, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+		VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -92,7 +93,7 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 
 	// Descriptor pool
 	std::vector<VkDescriptorPoolSize> poolSizes = {
-		Element::VkInitializers::descriptorPoolSizeCreateInfo(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
+		VkInitializers::descriptorPoolSizeCreateInfo(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1)
 	};
 
 	VkDescriptorPoolCreateInfo poolInfo{};
@@ -105,10 +106,12 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 		throw std::runtime_error("ImGui - failed to create descriptor pool!");
 	}
 
-	VkDescriptorSetLayoutBinding samplerLayoutBinding = Element::VkInitializers::descriptorSetLayoutBinding(VK_SHADER_STAGE_FRAGMENT_BIT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0);
+	VkDescriptorSetLayoutBinding samplerLayoutBinding = VkInitializers::descriptorSetLayoutBinding(
+	        VK_SHADER_STAGE_FRAGMENT_BIT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 0);
 
 	std::vector<VkDescriptorSetLayoutBinding> bindings = { samplerLayoutBinding };
-	VkDescriptorSetLayoutCreateInfo layoutInfo = Element::VkInitializers::descriptorSetLayoutCreateInfo(bindings.data(), static_cast<uint32_t>(bindings.size()));
+	VkDescriptorSetLayoutCreateInfo layoutInfo = VkInitializers::descriptorSetLayoutCreateInfo(
+	        bindings.data(), static_cast<uint32_t>(bindings.size()));
 
 	if (vkCreateDescriptorSetLayout(logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
 		throw std::runtime_error("ImGui - failed to create descriptor set layout!");
@@ -127,8 +130,8 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	}
 
 	std::vector<VkWriteDescriptorSet> descriptorWrites;
-	descriptorWrites.emplace_back(Element::VkInitializers::writeDesciptorSet(descriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		&fImage.m_descriptorInfo, 0));
+	descriptorWrites.emplace_back(VkInitializers::writeDesciptorSet(
+	        descriptorSet, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,&fImage.m_descriptorInfo, 0));
 
 	vkUpdateDescriptorSets(logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 
@@ -139,7 +142,7 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	pushConstantRange.offset = 0;
 	pushConstantRange.size = sizeof(PushConstBlock);
 
-	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = Element::VkInitializers::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = VkInitializers::pipelineLayoutCreateInfo(&descriptorSetLayout, 1);
 	pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 	pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -147,9 +150,11 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 		throw std::runtime_error("Imgui - failed to create pipeline layout!");
 	}
 
-	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = Element::VkInitializers::pipelineInputAssemblyCreateInfo(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = VkInitializers::pipelineInputAssemblyCreateInfo(
+	        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, VK_FALSE);
 
-	VkPipelineRasterizationStateCreateInfo rasterizationState = Element::VkInitializers::pipelineRasterizerCreateInfo(VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_POLYGON_MODE_FILL, VK_FALSE);
+	VkPipelineRasterizationStateCreateInfo rasterizationState = VkInitializers::pipelineRasterizerCreateInfo(
+	        VK_CULL_MODE_NONE, VK_FRONT_FACE_COUNTER_CLOCKWISE, VK_POLYGON_MODE_FILL, VK_FALSE);
 
 	// Enable blending
 	VkPipelineColorBlendAttachmentState blendAttachmentState{};
@@ -163,22 +168,22 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	blendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 	blendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
 
-	VkPipelineColorBlendStateCreateInfo colorBlendState = Element::VkInitializers::pipelineColourBlendCreateInfo(
+	VkPipelineColorBlendStateCreateInfo colorBlendState = VkInitializers::pipelineColourBlendCreateInfo(
 	        &blendAttachmentState, 1, VK_FALSE, VK_LOGIC_OP_COPY);
 
-	VkPipelineDepthStencilStateCreateInfo depthStencilState = Element::VkInitializers::pipelineDepthStencilCreateInfo(
+	VkPipelineDepthStencilStateCreateInfo depthStencilState = VkInitializers::pipelineDepthStencilCreateInfo(
 	        VK_FALSE, VK_FALSE, VK_COMPARE_OP_LESS_OR_EQUAL, VK_FALSE, VK_FALSE);
 
-	VkPipelineViewportStateCreateInfo viewportState =Element::VkInitializers::pipelineViewportCreateInfo(
+	VkPipelineViewportStateCreateInfo viewportState =VkInitializers::pipelineViewportCreateInfo(
 	        nullptr, 1, nullptr, 1);
-	VkPipelineMultisampleStateCreateInfo multisampling = Element::VkInitializers::pipelineMultisamplerCreateInfo
+	VkPipelineMultisampleStateCreateInfo multisampling = VkInitializers::pipelineMultisamplerCreateInfo
 	        (physicalDevice.msaaSamples, VK_FALSE);;
 	std::vector<VkDynamicState> dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-	VkPipelineDynamicStateCreateInfo dynamicState = Element::VkInitializers::dynamicStateCreateInfo(dynamicStateEnables);
+	VkPipelineDynamicStateCreateInfo dynamicState = VkInitializers::dynamicStateCreateInfo(dynamicStateEnables);
 
 	std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{};
 
-	VkGraphicsPipelineCreateInfo pipelineCreateInfo = Element::VkInitializers::graphicsPipelineCreateInfo();
+	VkGraphicsPipelineCreateInfo pipelineCreateInfo = VkInitializers::graphicsPipelineCreateInfo();
 
 	pipelineCreateInfo.stageCount = shaderStages.size();
 	pipelineCreateInfo.pStages = shaderStages.data();
@@ -200,16 +205,20 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 
 	// Vertex bindings an attributes based on ImGui vertex definition
 	std::vector<VkVertexInputBindingDescription> vertexInputBindings = {
-		Element::VkInitializers::vertexInputBindingDescription(VK_VERTEX_INPUT_RATE_VERTEX, 0, sizeof(ImDrawVert))
+		VkInitializers::vertexInputBindingDescription(
+		        VK_VERTEX_INPUT_RATE_VERTEX, 0, sizeof(ImDrawVert))
 	};
 	std::vector<VkVertexInputAttributeDescription> vertexInputAttributes = {
 
-		Element::VkInitializers::vertexInputAttributeDescription(0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(ImDrawVert, pos)),
-		Element::VkInitializers::vertexInputAttributeDescription(0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(ImDrawVert, uv)),
-		Element::VkInitializers::vertexInputAttributeDescription(0, 2, VK_FORMAT_R8G8B8A8_UNORM,offsetof(ImDrawVert, col))
+		VkInitializers::vertexInputAttributeDescription(
+		        0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(ImDrawVert, pos)),
+		VkInitializers::vertexInputAttributeDescription(
+		        0, 1, VK_FORMAT_R32G32_SFLOAT, offsetof(ImDrawVert, uv)),
+		VkInitializers::vertexInputAttributeDescription(
+		        0, 2, VK_FORMAT_R8G8B8A8_UNORM,offsetof(ImDrawVert, col))
 	};
 
-	VkPipelineVertexInputStateCreateInfo vertexInputState = Element::VkInitializers::pipelineVertexInputCreateInfo(1);
+	VkPipelineVertexInputStateCreateInfo vertexInputState = VkInitializers::pipelineVertexInputCreateInfo(1);
 	vertexInputState.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexInputBindings.size());
 	vertexInputState.pVertexBindingDescriptions = vertexInputBindings.data();
 	vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size());
@@ -220,9 +229,9 @@ void Element::ImGUI::initResources(VkRenderPass renderPass)
 	const auto& vert = Locator::getResource()->shader("ui", ShaderType::VERTEX);
     const auto& frag = Locator::getResource()->shader("ui", ShaderType::FRAGMENT);
 
-	shaderStages[0] = Element::VkInitializers::pipelineShaderStageCreateInfo(vert->GetVkShaderModule(),
-                                                                          vert->GetVkShaderStageFlag(), "main");
-	shaderStages[1] = Element::VkInitializers::pipelineShaderStageCreateInfo(frag->GetVkShaderModule(),
+	shaderStages[0] = VkInitializers::pipelineShaderStageCreateInfo(vert->GetVkShaderModule(),
+                                                                 vert->GetVkShaderStageFlag(), "main");
+	shaderStages[1] = VkInitializers::pipelineShaderStageCreateInfo(frag->GetVkShaderModule(),
                                                                           frag->GetVkShaderStageFlag(), "main");
 
 	if (vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline) != VK_SUCCESS) {

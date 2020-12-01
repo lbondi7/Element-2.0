@@ -8,8 +8,8 @@
 Game::Game()
 {
 	using namespace Element;
-    GameSettings::get().windowWidth = 900;
-    GameSettings::get().windowHeight = 600;
+    GameSettings::get().windowWidth = 1280;
+    GameSettings::get().windowHeight = 720;
     GameSettings::get().windowTitle = "Epic Element Engine";
     GameSettings::get().gameDimension = GameSettings::Dimension::_3D;
     GameSettings::get().windowMode = WindowMode::WINDOWED;
@@ -40,24 +40,13 @@ void Game::init()
 		++i;
 	} 
 	 
-	camera = m_renderer->createUniqueCamera(Element::CameraType::PERSPECTIVE);
-    //camerab = m_renderer->createUniqueCamera(Element::CameraType::PERSPECTIVE);
-    //camerab->setEnabled(false);
-	//camera = m_renderer->createOrthographicCamera();
-	//glm::vec4 viewport = camera->GetViewport();
-	//viewport.x = 0.5f; 
-	//viewport.y = 0.5f;
-	//viewport.z = 0.5f;
-	//viewport.w  = 0.5f;
-	//camera->setViewport(viewport);
+	camera = m_renderer->createUniqueCamera(Element::ViewType::PERSPECTIVE,
+                                         Element::ViewDimension::_3D);
+	camera->setPosZ(-5);
 
-	//camera->SetPosX(m_renderer->getWindow()->getSize().x );
-	//camera->SetPosY(m_renderer->getWindow()->getSize().y );
-    //m_renderer->addCamera(camera, 0);
-
-	//sprite = m_renderer->createNewSprite();
-	//sprite->GetTransform().setPosition(0.0f, 0.0f);
-	//sprite->GetTransform().setSize(100, 100);
+	sprite = m_renderer->createNewSprite();
+	sprite->GetTransform().setPosition(0.0f, 0.0f);
+	sprite->GetTransform().setSize(100, 100);
 	frameTime.resize(10);
 }
 
@@ -67,7 +56,7 @@ void Game::update(Element::Time& epoch)
 
 	//sprite->GetTransform().setPositionY(sprite->GetTransform().getPositionY() + dt_sec);
 
-	float zoomSpeed = 100.0f;
+	float zoomSpeed = 10.0f;
 
     float moveSpeed = 10.0f;
 
@@ -77,33 +66,44 @@ void Game::update(Element::Time& epoch)
 //		camera->SetZoom(camera->GetZoom() - zoomSpeed * dt_sec);
 
     if (Element::Inputs::get().keyDown(Element::KEYS::KEY_P))
-        objects[0].model->SetTexture(m_renderer->getTexture("texture"));
+        camera->setFOV(177.777f);
 
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_9))
-        camera->setRotY( camera->getRotY() - zoomSpeed * dt_sec);
+        camera->setFOV(camera->getFOV() - zoomSpeed * dt_sec);
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_7))
-        camera->setRotY(camera->getRotY() + zoomSpeed * dt_sec);
+        camera->setFOV(camera->getFOV() + zoomSpeed * dt_sec);
 
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_8))
-        camera->setPos( camera->getPos() + (camera->GetForward() * moveSpeed * dt_sec));
+        camera->setPos( camera->getPos() + (camera->getUp() * moveSpeed * dt_sec));
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_5))
-        camera->setPos( camera->getPos() - (camera->GetForward() * moveSpeed * dt_sec));
+        camera->setPos( camera->getPos() - (camera->getUp() * moveSpeed * dt_sec));
 
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_4))
-        camera->setPos( camera->getPos() - (camera->GetRight() * moveSpeed * dt_sec));
+        camera->setPos( camera->getPos() - (camera->getRight() * moveSpeed * dt_sec));
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_6))
-        camera->setPos( camera->getPos() + (camera->GetRight() * moveSpeed * dt_sec));
+        camera->setPos( camera->getPos() + (camera->getRight() * moveSpeed * dt_sec));
 
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_1))
-        camera->setPos( camera->getPos() - (camera->GetUp() * moveSpeed * dt_sec));
+        camera->setRotY( camera->getRotY() * moveSpeed * dt_sec);
     if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_KP_3))
-        camera->setPos( camera->getPos() + (camera->GetUp() * moveSpeed * dt_sec));
+        camera->setRotY( camera->getRotY() * moveSpeed * dt_sec);
 
+    if (Element::Inputs::get().keyHeld(Element::KEYS::KEY_LEFT)) {
+        objects[0].model->GetTransform().setPositionX(
+                objects[0].model->GetTransform().getPositionX() + moveSpeed * dt_sec);
+        objects[0].model->GetTransform().setPositionY(
+                objects[0].model->GetTransform().getPositionY() + moveSpeed * dt_sec);
+    }
 
 	if (Element::Inputs::get().keyDown(Element::KEYS::KEY_ESCAPE))
 	{
 		m_renderer->signalExit();
 	}
+
+    if (Element::Inputs::get().keyDown(Element::KEYS::KEY_SPACE))
+    {
+           Element::Debugger::get().log(camera->getFOV());
+    }
 
 	epoch.getFPS(fps);
 	if (fps != static_cast<int>(frameTime[counter]))
@@ -132,8 +132,8 @@ void Game::render()
 
 
 
-	Element::DebugWindow window;
-	window.graph("My Int", &frameTime[0], 900.0f, 1300.0f, 10);
+//	Element::DebugWindow window;
+//	window.graph("My Int", &frameTime[0], 900.0f, 1300.0f, 10);
 
 }
 

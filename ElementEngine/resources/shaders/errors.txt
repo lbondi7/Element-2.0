@@ -1,0 +1,2 @@
+shader3.vert:27: error: 'assign' :  cannot convert from 'layout( location=2) in highp 3-component vector of float' to 'layout( location=2) smooth out highp 2-component vector of float'
+1 error generated.

@@ -44,7 +44,7 @@ void Element::VknBuffer::Create(VkDeviceSize size, VkDeviceSize offset, VkBuffer
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = Element::VkFunctions::GetMemoryType(
+    allocInfo.memoryTypeIndex = VkFunctions::GetMemoryType(
             physicalDevice.m_memoryProperties, memRequirements.memoryTypeBits, properties);
 
 //    Debugger::get().log("Memory Type Bits",
