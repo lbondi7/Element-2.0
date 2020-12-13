@@ -71,14 +71,12 @@ Element::VknBufferData &Element::Allocator::getBuffer(VkDescriptorBufferInfo& de
     minAlignment = minAlignment * static_cast<VkDeviceSize>(amount);
 
     for (auto& buffer : bufferPool) {
-        if (usage == buffer.usage) {
-            if (minAlignment + buffer.size <= buffer.maxSize) {
-                descInfo.offset = buffer.size;
-                offset = buffer.memoryData->currentOffset;
-                buffer.size += minAlignment;
-                buffer.memoryData->currentOffset += minAlignment;
-                return buffer;
-            }
+        if (usage == buffer.usage && (minAlignment + buffer.size <= buffer.maxSize)) {
+            descInfo.offset = buffer.size;
+            offset = buffer.memoryData->currentOffset;
+            buffer.size += minAlignment;
+            buffer.memoryData->currentOffset += minAlignment;
+            return buffer;
         }
     }
 

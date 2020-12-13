@@ -20,16 +20,14 @@ void Element::DebugRenderer::init(VknSwapChain* _swapChain, VknRenderPass* rende
     swapChain = _swapChain;
 
 	PipelineData pData{};
-    ShaderInfo shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
-                             "collider", 1, 0, 1000 };
-    pData.shaderInfo.emplace_back(shaderInfo);
-    shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
-                             "collider", 0, 0 };
-    pData.shaderInfo.emplace_back(shaderInfo);
+    DescriptorInfo descriptorInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
+                                     "collider", 1, 0 };
+    pData.descriptorInfo.emplace_back(descriptorInfo);
 
-    shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
-                  "collider", 2, 0 };
-    pData.shaderInfo.emplace_back(shaderInfo);
+    descriptorInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
+                      "collider", 2, 0 };
+    pData.descriptorInfo.emplace_back(descriptorInfo);
+
     pData.polygonMode = PipelinePolygonMode::LINE;
     pData.cullMode = PipelineCulling::NONE;
 	pData.lightingEnabled = false;

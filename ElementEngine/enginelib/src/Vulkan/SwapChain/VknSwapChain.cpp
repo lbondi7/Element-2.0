@@ -6,7 +6,6 @@
 
 #include <stdexcept>
 
-
 Element::VknSwapChain::VknSwapChain(GLFWwindow* window, VkSurfaceKHR surface)
 {
     init(window, surface);
@@ -86,7 +85,6 @@ void Element::VknSwapChain::createSwapChain(GLFWwindow* window, VkSurfaceKHR sur
 
     auto logicalDevice = Device::getVkDevice();
     auto physicalDevice = Device::GetPhysicalDevice()->GetSelectedDevice(true);
-
     //SwapChainSupportDetails swapChainSupport = Element::VkFunctions::querySwapChainSupport(physicalDevice, surface);
 
     VkSurfaceFormatKHR surfaceFormat =

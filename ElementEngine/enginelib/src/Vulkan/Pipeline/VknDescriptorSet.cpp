@@ -100,7 +100,7 @@ void Element::VknDescriptorSet::createDescWritesAndUpdate()
 
         auto& descriptorWrites = descriptors.second[i];
         int j = 0;
-        for (const auto& binding : pipeline->GetPipelineData().shaderInfo)
+        for (const auto& binding : pipeline->GetPipelineData().descriptorInfo)
         {
             if(id != binding.set)
                 continue;

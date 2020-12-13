@@ -202,17 +202,17 @@ void Element::VknRenderer::createRenderer() {
     m_pipelineManager = std::make_unique<PipelineManager>(swapChain.get(), renderPass.get());
 
     PipelineData pipelineData{};
-    ShaderInfo shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
-                             "defaultLighting", 2, 0, 1000 };
-    pipelineData.shaderInfo.emplace_back(shaderInfo);
+    DescriptorInfo descriptorInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
+                                     "defaultLighting", 2, 0 };
+    pipelineData.descriptorInfo.emplace_back(descriptorInfo);
 
-    shaderInfo = {BindObjectType::IMAGE, ShaderType::FRAGMENT,
-                  "defaultLighting", 2,1};
-    pipelineData.shaderInfo.emplace_back(shaderInfo);
+    descriptorInfo = {BindObjectType::COMBINED_IMAGE_SAMPLER, ShaderType::FRAGMENT,
+                      "defaultLighting", 2, 1};
+    pipelineData.descriptorInfo.emplace_back(descriptorInfo);
 
-    shaderInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
-                  "defaultLighting", 2, 2};
-    pipelineData.shaderInfo.emplace_back(shaderInfo);
+    descriptorInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
+                      "defaultLighting", 2, 2};
+    pipelineData.descriptorInfo.emplace_back(descriptorInfo);
 
     m_pipelineManager->generatePipeline("default", pipelineData);
 

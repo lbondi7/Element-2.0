@@ -11,7 +11,7 @@
 
 #include "PipelineData.h"
 #include "VknDescriptorPool.h"
-#include <Shader/ShaderInfo.h>
+#include <Vulkan/Pipeline/DescriptorInfo.h>
 
 #include <vector>
 

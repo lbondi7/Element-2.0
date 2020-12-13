@@ -190,11 +190,12 @@ bool Element::Resources::LoadMaterialData(const char *file, MaterialData& materi
     tinyobj::LoadMtl(&material_map, &materials, &is, &warn, &err);
 
 
-    materialData.ambient = Vec3(materials[0].ambient);
-    materialData.diffuse = Vec3(materials[0].diffuse);
-    materialData.specular = Vec3(materials[0].specular);
-    materialData.emission = Vec3(materials[0].emission);
-    materialData.transmittance = Vec3(materials[0].transmittance);
+    materialData.ambient = Vec3(materials[0].ambient[0], materials[0].ambient[1], materials[0].ambient[2]);
+    materialData.diffuse = Vec3(materials[0].diffuse[0], materials[0].diffuse[1], materials[0].diffuse[2]);
+    materialData.specular = Vec3(materials[0].specular[0], materials[0].specular[1], materials[0].specular[2]);
+    materialData.emission = Vec3(materials[0].emission[0], materials[0].emission[1], materials[0].emission[2]);
+    materialData.transmittance = Vec3(
+            materials[0].transmittance[0],materials[0].transmittance[1], materials[0].transmittance[2]);
     materialData.shininess = materials[0].shininess;
     materialData.dissolve = materials[0].dissolve;
     materialData.refractionIndex = materials[0].ior;

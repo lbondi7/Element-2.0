@@ -39,7 +39,7 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Debug/DebugRenderer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Debug/DebugWindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Debug/Debugger.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Shader/ShaderInfo.h
+    src/Vulkan/Pipeline/DescriptorInfo.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Pipeline/VknDescriptorSet.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Pipeline/VknDescriptorSet.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Device/Device.cpp
@@ -123,7 +123,9 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Allocator/BufferAllocator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Vulkan/Allocator/BufferAllocator.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Physics/Collider/BoxCollider.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Physics/Collider/BoxCollider.h src/Physics/Physics.cpp src/Physics/Physics.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Physics/Collider/BoxCollider.h
+    src/Physics/Physics.cpp
+    src/Physics/Physics.h)
 
 #target_include_directories(
 #    ${PROJECT_NAME} SYSTEM PUBLIC
@@ -147,12 +149,14 @@ set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLM_TEST_ENABLE OFF CACHE BOOL "" FORCE)
+set(JSON_BuildTests OFF CACHE INTERNAL "")
 
 add_subdirectory(libs/glfw)
 add_subdirectory(libs/glm)
 add_subdirectory(libs/tinyobjloader)
 add_subdirectory(libs/stb)
 add_subdirectory(libs/imgui)
+add_subdirectory(libs/nlohmann)
 
 find_package(Vulkan REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan::Vulkan)
@@ -161,4 +165,5 @@ target_link_libraries(${PROJECT_NAME} PUBLIC glm)
 target_link_libraries(${PROJECT_NAME} PUBLIC stb)
 target_link_libraries(${PROJECT_NAME} PUBLIC tinyobjloader)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
+target_link_libraries(${PROJECT_NAME} PRIVATE nlohmann_json::nlohmann_json)
 

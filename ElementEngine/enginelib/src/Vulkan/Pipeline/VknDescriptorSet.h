@@ -2,7 +2,7 @@
 
 #include <Vulkan/VknConstants.h>
 #include <Vulkan/VknBuffer.h>
-#include <Shader/ShaderInfo.h>
+#include <Vulkan/Pipeline/DescriptorInfo.h>
 
 #include <map>
 

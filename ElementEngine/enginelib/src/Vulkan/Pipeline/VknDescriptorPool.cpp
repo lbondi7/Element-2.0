@@ -21,20 +21,20 @@ void Element::VknDescriptorPool::init(const PipelineData& _pipelineData,
 
     flushed = false;
     pipelineData = _pipelineData;
-    uint32_t requireSetInfo = 0;
+   // uint32_t requiredSetInfo = 0;
     std::vector<VkDescriptorPoolSize> poolSizes;
-    for (const auto& binding : pipelineData.shaderInfo)
+    for (const auto& binding : pipelineData.descriptorInfo)
     {
-        auto descriptorCount = imageCount * binding.count;
-        poolSizes.emplace_back(Element::VkInitializers::descriptorPoolSizeCreateInfo(
+        auto descriptorCount = imageCount;
+        poolSizes.emplace_back(VkInitializers::descriptorPoolSizeCreateInfo(
                 VkFunctions::getDescriptorType(binding.bindObjectType), descriptorCount));
-        requireSetInfo += descriptorCount;
+        //requiredSetInfo += descriptorCount;
     }
-    maxSets = requireSetInfo;
+    maxSets = imageCount * 1000;
     VkDescriptorPoolCreateInfo poolInfo =
             VkInitializers::descriptorPoolCreateInfo(poolSizes.data(),
                                                      static_cast<uint32_t>(poolSizes.size()),
-                                                     requireSetInfo);
+                                                     maxSets);
 
     if (vkCreateDescriptorPool(Device::getVkDevice(), &poolInfo, nullptr, &m_vkDescriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create descriptor pool!");

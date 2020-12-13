@@ -15,6 +15,7 @@
 #include <Lighting/LightManager.h>
 #include <Camera/EleCamera.h>
 
+
 namespace Element {
 
 	class VknRenderer final : public Renderer

@@ -5,14 +5,14 @@
 #pragma once
 
 #include <Shader/Shader.h>
-#include <Shader/ShaderInfo.h>
+#include <Vulkan/Pipeline/DescriptorInfo.h>
 
 #include <element/GameSettings.h>
 
 namespace Element{
 
 struct PipelineData {
-    std::vector<ShaderInfo> shaderInfo;
+    std::vector<DescriptorInfo> descriptorInfo;
 
     bool depthEnabled = GameSettings::get().depthEnabled;
     PipelinePolygonMode polygonMode = PipelinePolygonMode::FILL;

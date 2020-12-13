@@ -7,7 +7,10 @@
 namespace Element {
 
     enum class BindObjectType : int {
-        IMAGE = 1,
+        SAMPLER = 0,
+        COMBINED_IMAGE_SAMPLER = 1,
+        SAMPLED_IMAGE = 2,
+        STORAGE_IMAGE = 3,
         STATIC_UNIFORM_BUFFER = 6,
         STATIC_STORAGE_BUFFER = 7,
         DYNAMIC_UNIFORM_BUFFER = 8,
