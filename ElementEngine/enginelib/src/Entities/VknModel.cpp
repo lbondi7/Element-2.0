@@ -148,6 +148,7 @@ void Element::VknModel::destroy()
 	{
         buffer.Destroy2();
 	}
+	collider->deInit();
 }
 
 void Element::VknModel::init(VknPipeline* _pipeline, uint32_t imageCount)

@@ -5,11 +5,9 @@
 #include <Vulkan/Device/Device.h>
 #include <ImGUI_/ImGUI_.h>
 #include <Vulkan/Allocator/Allocator.h>
+#include <element/Inputs.h>
 
 #include <imgui.h>
-
-#include <element/Debugger.h>
-#include <element/Inputs.h>
 
 #include <stdexcept>
 #include <memory>

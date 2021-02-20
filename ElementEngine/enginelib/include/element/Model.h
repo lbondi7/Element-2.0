@@ -6,7 +6,7 @@
 
 namespace Element {
 
-	struct VknPipeline;
+	class VknPipeline;
 	struct Mesh;
 	struct Texture;
 

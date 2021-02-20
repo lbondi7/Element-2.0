@@ -29,6 +29,15 @@ void Element::BoxCollider::init(const glm::mat4 *_objectTransform) {
     mesh = Locator::getResource()->mesh("cube");
 }
 
+void Element::BoxCollider::deInit() {
+    objectTransform = nullptr;
+    for (auto& buffer : uniformBuffers)
+    {
+        buffer.Destroy2();
+    }
+    mesh = nullptr;
+}
+
 void Element::BoxCollider::update(uint32_t imageIndex){
 
     auto pos = Utilities::vec3RefToGlmvec3(transform.getPosition());

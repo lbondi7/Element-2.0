@@ -66,6 +66,11 @@ void Element::DebugRenderer::deint()
 {
 
 	ImGUI::Get().deint();
+	pipeline->destroy();
+    for (auto& buffer : uniformBuffers)
+    {
+        buffer.Destroy2();
+    }
 }
 
 bool Element::DebugRenderer::isInvalid()

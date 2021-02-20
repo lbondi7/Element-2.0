@@ -125,7 +125,7 @@ add_library(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Physics/Collider/BoxCollider.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Physics/Collider/BoxCollider.h
     src/Physics/Physics.cpp
-    src/Physics/Physics.h)
+    src/Physics/Physics.h src/Components/Component.cpp src/Components/Component.h)
 
 #target_include_directories(
 #    ${PROJECT_NAME} SYSTEM PUBLIC

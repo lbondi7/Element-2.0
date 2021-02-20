@@ -25,6 +25,9 @@ namespace Element {
         VknDescriptorSet* getDescriptorSet();
 
         void initDescriptorSet(VknPipeline* pipeline, uint32_t imageCount);
+
+        void deInit();
+
         Mesh* mesh;
         Transform transform;
 

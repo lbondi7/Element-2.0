@@ -17,7 +17,7 @@
 
 namespace Element {
 
-	struct VknPipeline
+	class VknPipeline
 	{
 	public:
 		VknPipeline() = default;

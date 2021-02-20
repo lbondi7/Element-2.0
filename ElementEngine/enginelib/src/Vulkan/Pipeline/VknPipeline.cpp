@@ -56,72 +56,72 @@ m_swapChain(swapChain), m_renderPass(renderPass), name(name), m_pipelineData(pip
     init();
 }
 
-Element::VknPipeline::VknPipeline(VknSwapChain* swapChain, VknRenderPass* renderPass, const std::string& name, const PipelineData& pipelineInfo) :
-        m_swapChain(swapChain), m_renderPass(renderPass), name(name), m_pipelineData(pipelineInfo)
-{
-    std::ifstream file("resources/pipelines/" + name + ".json");
-    json j;
-    file >> j;
-    auto shaderCount = j["shaderCount"];
-    DescriptorInfo descriptorInfo;
-    int numberOfSets = 0;
-    for(auto shad : j["shaders"])
-    {
-        auto shader = Locator::getResource()->shader(shad["name"], static_cast<ShaderType>(shad["type"]));
-        shaderStages.emplace_back(VkInitializers::pipelineShaderStageCreateInfo(
-                shader->GetVkShaderModule(), shader->GetVkShaderStageFlag()));
-
-        for(auto buffer : shad["buffers"])
-        {
-            descriptorInfo = {static_cast<BindObjectType>(buffer["type"]), static_cast<ShaderType>(shad["type"]),
-                             shad["name"], buffer["set"], buffer["binding"]};
-
-            if(buffer["set"] > numberOfSets)
-                numberOfSets = buffer["set"];
-            m_pipelineData.descriptorInfo.emplace_back(descriptorInfo);
-        }
-
-    }
-    m_descriptorSetLayouts.resize(numberOfSets + 1);
-
-//    DescriptorInfo descriptorInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
-//                                     m_pipelineData.descriptorInfo[0].shader, 0, 0};
-//    m_pipelineData.descriptorInfo.emplace(m_pipelineData.descriptorInfo.cbegin(), descriptorInfo);
-//    if(m_pipelineData.lightingEnabled) {
-//        descriptorInfo = {BindObjectType::STATIC_STORAGE_BUFFER, ShaderType::FRAGMENT,
-//                          m_pipelineData.descriptorInfo[0].shader, 1, 0};
-//        m_pipelineData.descriptorInfo.emplace(m_pipelineData.descriptorInfo.cbegin(), descriptorInfo);
-//        descriptorInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
-//                          m_pipelineData.descriptorInfo[0].shader, 1, 1};
-//        m_pipelineData.descriptorInfo.emplace(m_pipelineData.descriptorInfo.cbegin(), descriptorInfo);
-//    }
-//
+//Element::VknPipeline::VknPipeline(VknSwapChain* swapChain, VknRenderPass* renderPass, const std::string& name, const PipelineData& pipelineInfo) :
+//        m_swapChain(swapChain), m_renderPass(renderPass), name(name), m_pipelineData(pipelineInfo)
+//{
+//    std::ifstream file("resources/pipelines/" + name + ".json");
+//    json j;
+//    file >> j;
+//    auto shaderCount = j["shaderCount"];
+//    DescriptorInfo descriptorInfo;
 //    int numberOfSets = 0;
-//    for (const auto& shaderInfo : m_pipelineData.descriptorInfo) {
-////        bindingsData.emplace_back(
-////                VkInitializers::descriptorSetLayoutBinding(
-////                        Shader::GetVkShaderStageFlag(shaderInfo.shaderType),
-////                        VkFunctions::getDescriptorType(shaderInfo.bindObjectType),
-////                        shaderInfo.binding));
+//    for(auto shad : j["shaders"])
+//    {
+//        auto shader = Locator::getResource()->shader(shad["name"], static_cast<ShaderType>(shad["type"]));
+//        shaderStages.emplace_back(VkInitializers::pipelineShaderStageCreateInfo(
+//                shader->GetVkShaderModule(), shader->GetVkShaderStageFlag()));
 //
-//        if(shaderInfo.set > numberOfSets)
-//            numberOfSets = shaderInfo.set;
+//        for(auto buffer : shad["buffers"])
+//        {
+//            descriptorInfo = {static_cast<BindObjectType>(buffer["type"]), static_cast<ShaderType>(shad["type"]),
+//                             shad["name"], buffer["set"], buffer["binding"]};
 //
-//        auto shader = Locator::getResource()->shader(shaderInfo.shader, shaderInfo.shaderType);
-//        bool loaded = false;
-//        for (const auto& shaderStage : shaderStages) {
-//            if(shader->GetVkShaderStageFlag() == shaderStage.stage)
-//                loaded = true;
+//            if(buffer["set"] > numberOfSets)
+//                numberOfSets = buffer["set"];
+//            m_pipelineData.descriptorInfo.emplace_back(descriptorInfo);
 //        }
-//        if(!loaded)
-//            shaderStages.emplace_back(VkInitializers::pipelineShaderStageCreateInfo(
-//                    shader->GetVkShaderModule(), shader->GetVkShaderStageFlag()));
-//    }
 //
+//    }
 //    m_descriptorSetLayouts.resize(numberOfSets + 1);
-
-    init();
-}
+//
+////    DescriptorInfo descriptorInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::VERTEX,
+////                                     m_pipelineData.descriptorInfo[0].shader, 0, 0};
+////    m_pipelineData.descriptorInfo.emplace(m_pipelineData.descriptorInfo.cbegin(), descriptorInfo);
+////    if(m_pipelineData.lightingEnabled) {
+////        descriptorInfo = {BindObjectType::STATIC_STORAGE_BUFFER, ShaderType::FRAGMENT,
+////                          m_pipelineData.descriptorInfo[0].shader, 1, 0};
+////        m_pipelineData.descriptorInfo.emplace(m_pipelineData.descriptorInfo.cbegin(), descriptorInfo);
+////        descriptorInfo = {BindObjectType::STATIC_UNIFORM_BUFFER, ShaderType::FRAGMENT,
+////                          m_pipelineData.descriptorInfo[0].shader, 1, 1};
+////        m_pipelineData.descriptorInfo.emplace(m_pipelineData.descriptorInfo.cbegin(), descriptorInfo);
+////    }
+////
+////    int numberOfSets = 0;
+////    for (const auto& shaderInfo : m_pipelineData.descriptorInfo) {
+//////        bindingsData.emplace_back(
+//////                VkInitializers::descriptorSetLayoutBinding(
+//////                        Shader::GetVkShaderStageFlag(shaderInfo.shaderType),
+//////                        VkFunctions::getDescriptorType(shaderInfo.bindObjectType),
+//////                        shaderInfo.binding));
+////
+////        if(shaderInfo.set > numberOfSets)
+////            numberOfSets = shaderInfo.set;
+////
+////        auto shader = Locator::getResource()->shader(shaderInfo.shader, shaderInfo.shaderType);
+////        bool loaded = false;
+////        for (const auto& shaderStage : shaderStages) {
+////            if(shader->GetVkShaderStageFlag() == shaderStage.stage)
+////                loaded = true;
+////        }
+////        if(!loaded)
+////            shaderStages.emplace_back(VkInitializers::pipelineShaderStageCreateInfo(
+////                    shader->GetVkShaderModule(), shader->GetVkShaderStageFlag()));
+////    }
+////
+////    m_descriptorSetLayouts.resize(numberOfSets + 1);
+//
+//    init();
+//}
 
 Element::VknPipeline::~VknPipeline()
 {

@@ -56,10 +56,14 @@ void Element::VknImage::Create(uint32_t width, uint32_t height, uint32_t mipLeve
 void Element::VknImage::Destroy()
 {
     auto logicalDevice = Device::getVkDevice();
-    if(m_vkImage)
+    if(m_vkImage) {
         vkDestroyImage(logicalDevice, m_vkImage, nullptr);
-    if(m_memory)
+        m_vkImage = nullptr;
+    }
+    if(m_memory) {
         vkFreeMemory(logicalDevice, m_memory, nullptr);
+        m_memory = nullptr;
+    }
 }
 
 void Element::VknImage::CopyFromBuffer(VkBuffer buffer, uint32_t width, uint32_t height) {
