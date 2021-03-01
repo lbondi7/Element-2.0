@@ -68,6 +68,6 @@ namespace Element {
 		void print(const std::string& type, const std::string& message, Colour forground, Colour background);
 		void print(const std::string& type, const char* file, int line, const char* message, Colour forground, Colour background);
 
-		std::map<std::string, std::chrono::steady_clock::time_point> map;
+		std::map<std::string, std::chrono::high_resolution_clock::time_point> map;
 	};
 }

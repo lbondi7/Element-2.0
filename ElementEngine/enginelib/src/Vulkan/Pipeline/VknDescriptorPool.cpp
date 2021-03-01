@@ -25,7 +25,7 @@ void Element::VknDescriptorPool::init(const PipelineData& _pipelineData,
     std::vector<VkDescriptorPoolSize> poolSizes;
     for (const auto& binding : pipelineData.descriptorInfo)
     {
-        auto descriptorCount = imageCount;
+        auto descriptorCount = imageCount * 1000;
         poolSizes.emplace_back(VkInitializers::descriptorPoolSizeCreateInfo(
                 VkFunctions::getDescriptorType(binding.bindObjectType), descriptorCount));
         //requiredSetInfo += descriptorCount;

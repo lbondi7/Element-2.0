@@ -16,7 +16,7 @@ namespace Element {
 
 		bool invalid = false;
 
-		bool renderColliders = false;
+		bool renderColliders = true;
     public:
 
 		DebugRenderer() = default;
@@ -41,7 +41,6 @@ namespace Element {
 		std::unique_ptr<VknPipeline> pipeline;
 
 		VknSwapChain* swapChain;
-
 
 		std::vector<VknBuffer> uniformBuffers;
 

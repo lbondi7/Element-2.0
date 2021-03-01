@@ -121,12 +121,12 @@ void Element::VknRenderer::renderFrame()
     m_lightManager->update(imageIndex);
 
     int i = 0;
-    for (auto& cam : cameras)
+    for (auto& cam : m_cameras)
     {
         if(cam)
             cam->update(window->getSize().x, window->getSize().y, imageIndex);
         else
-            cameras.erase(cameras.cbegin() + i);
+            m_cameras.erase(m_cameras.cbegin() + i);
         ++i;
     }
 
@@ -180,7 +180,7 @@ void Element::VknRenderer::recreateRenderer() {
     for (const auto& sprite : vknSprites)
         sprite->reInit(imageCount);
 
-    for (const auto& cam : cameras)
+    for (const auto& cam : m_cameras)
         cam->reInit(imageCount);
 
     m_lightManager->reInit(imageCount);
@@ -255,14 +255,14 @@ void Element::VknRenderer::cleanupRenderer() {
         if(sprite)
             sprite->destroy();
     }
-    for (const auto& camera : cameras) {
+    for (const auto& camera : m_cameras) {
         if(camera)
             camera->destroy();
     }
 
     vknModels.clear();
     vknSprites.clear();
-    cameras.clear();
+    m_cameras.clear();
 
     for (auto& commandBuffer : commandBuffers) {
         commandBuffer->destroy();
@@ -296,8 +296,8 @@ void Element::VknRenderer::rebuildCommandBuffers() {
         const auto& vkCmdBuffer = commandBuffers[i]->GetVkCommandBuffer();
         renderPass->begin(vkCmdBuffer, static_cast<int>(i));
         
-        if (!cameras.empty()) {
-            for (auto& cam :  cameras) {
+        if (!m_cameras.empty()) {
+            for (auto& cam :  m_cameras) {
                 if(!cam || !cam->isEnabled()) continue;
 
                 cam->setViewportAndRect(vkCmdBuffer, windowSize);
@@ -536,17 +536,17 @@ void Element::VknRenderer::addCamera(Element::Camera *_camera, int element)
         return;
 
     if(element == -1) {
-        if (cameras.size() < Device::GetPhysicalDevice()->GetSelectedDevice().m_properties.limits.maxViewports)
-            cameras.emplace_back(c);
+        if (m_cameras.size() < Device::GetPhysicalDevice()->GetSelectedDevice().m_properties.limits.maxViewports)
+            m_cameras.emplace_back(c);
         else {
-            for (auto &cam : cameras) {
+            for (auto &cam : m_cameras) {
                 if (!cam)
                     cam = c;
             }
         }
     }
-    else if(element > 0 || element < cameras.size())
-        cameras[element] = c;
+    else if(element > 0 || element < m_cameras.size())
+        m_cameras[element] = c;
 }
 
 std::unique_ptr<Element::Camera> Element::VknRenderer::createUniqueCamera(Element::ViewType type, ViewDimension dimension) {

@@ -80,6 +80,9 @@ bool Element::DebugRenderer::isInvalid()
 
 void Element::DebugRenderer::draw3D(VkCommandBuffer commandBuffer, VkDescriptorSet camDescSet, uint32_t i) {
 
+    if(!renderColliders)
+        return;
+
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline());
 
     std::vector<VkDescriptorSet> descriptorSets;

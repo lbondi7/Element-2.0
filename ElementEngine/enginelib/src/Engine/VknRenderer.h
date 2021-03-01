@@ -112,7 +112,7 @@ namespace Element {
 
 		std::unique_ptr<LightManager> m_lightManager;
 
-		std::vector<EleCamera*> cameras;
+		std::vector<EleCamera*> m_cameras;
 
 //		std::vector<Buffer> camBuffers;
 //

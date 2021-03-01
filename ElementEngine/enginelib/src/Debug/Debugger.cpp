@@ -59,12 +59,12 @@ void Element::Debugger::warning(const std::string& message, Colour forground, Co
 
 void Element::Debugger::startTimer(const std::string& name)
 {
-	map[name] = std::chrono::steady_clock::now();
+	map[name] = std::chrono::high_resolution_clock::now();
 }
 
 void Element::Debugger::endTimer(const std::string& name, Colour forground, Colour background)
 {
-	auto time = std::chrono::steady_clock::now();
+	auto time = std::chrono::high_resolution_clock::now();
 	auto diff = std::chrono::duration<float, std::milli>(time - map[name]).count();
 	setConsoleTextColour(forground, background);
 	std::cout << "[" << name <<  "]: " << std::setprecision(6) << diff << "ms" << std::endl;
