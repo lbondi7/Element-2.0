@@ -4,14 +4,17 @@
 
 #pragma once
 
+namespace Element {
 
-class Component {
-public:
-    virtual ~Component() = default;
+    class Component {
+    public:
+        virtual ~Component() = default;
 
-private:
 
+
+    private:
+
+    };
 };
-
 
 //ELEMENTENGINE_COMPONENT_H

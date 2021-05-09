@@ -17,16 +17,17 @@ SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 FOREACH(subdir ${SUBDIRS})
   #add_subdirectory(${subdir})
   add_library(${PROJECT_NAME}
-      ${subdir}/imgui.cpp
-      ${subdir}/imgui.h
-      ${subdir}/imgui_demo.cpp
-      ${subdir}/imgui_draw.cpp
-      ${subdir}/imgui_internal.h
-      ${subdir}/imgui_widgets.cpp
-      ${subdir}/imstb_rectpack.h
-      ${subdir}/imstb_textedit.h
-      ${subdir}/imstb_truetype.h)
-  
+          ${subdir}/imgui.cpp
+          ${subdir}/imgui.h
+          ${subdir}/imgui_demo.cpp
+          ${subdir}/imgui_draw.cpp
+          ${subdir}/imgui_internal.h
+          ${subdir}/imgui_widgets.cpp
+          ${subdir}/imstb_rectpack.h
+          ${subdir}/imstb_textedit.h
+          ${subdir}/imstb_truetype.h
+          )
+
   target_include_directories(
       ${PROJECT_NAME} SYSTEM PUBLIC
       "${CMAKE_CURRENT_SOURCE_DIR}/${subdir}")

@@ -21,16 +21,16 @@ void Element::VknDescriptorPool::init(const PipelineData& _pipelineData,
 
     flushed = false;
     pipelineData = _pipelineData;
-   // uint32_t requiredSetInfo = 0;
+    uint32_t requiredSetInfo = 0;
     std::vector<VkDescriptorPoolSize> poolSizes;
     for (const auto& binding : pipelineData.descriptorInfo)
     {
-        auto descriptorCount = imageCount * 1000;
+        auto descriptorCount = imageCount * 300;
         poolSizes.emplace_back(VkInitializers::descriptorPoolSizeCreateInfo(
                 VkFunctions::getDescriptorType(binding.bindObjectType), descriptorCount));
-        //requiredSetInfo += descriptorCount;
+        requiredSetInfo += descriptorCount;
     }
-    maxSets = imageCount * 1000;
+    maxSets = requiredSetInfo;
     VkDescriptorPoolCreateInfo poolInfo =
             VkInitializers::descriptorPoolCreateInfo(poolSizes.data(),
                                                      static_cast<uint32_t>(poolSizes.size()),

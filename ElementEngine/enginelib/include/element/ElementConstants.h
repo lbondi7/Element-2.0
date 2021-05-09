@@ -58,5 +58,4 @@ namespace Element {
         BACK = 2,
         BOTH = 3
     };
-
 }
